@@ -1,68 +1,68 @@
 .. _query-operators:
 
-Query operators
+クエリー演算子
 ===============
 
-The following types of comparisons are supported by peewee:
+peeweeでは以下の形式の比較方法をサポートしています:
 
 ================ =======================================
-Comparison       Meaning
+比較              意味
 ================ =======================================
-``==``           x equals y
-``<``            x is less than y
-``<=``           x is less than or equal to y
-``>``            x is greater than y
-``>=``           x is greater than or equal to y
-``!=``           x is not equal to y
-``<<``           x IN y, where y is a list or query
-``>>``           x IS y, where y is None/NULL
-``%``            x LIKE y where y may contain wildcards
-``**``           x ILIKE y where y may contain wildcards
+``==``           x と y が等しい
+``<``            x は y 未満
+``<=``           x は y 以下
+``>``            x は y より大きい
+``>=``           x は y 以上
+``!=``           x は y と異なる
+``<<``           x IN y, y はリストまたはクエリー
+``>>``           x IS y, y は None または NULL
+``%``            x LIKE y, y はワイルドカードを含んでもよい
+``**``           x ILIKE y, y はワイルドカードを含んでもよい
 ``^``            x XOR y
-``~``            Unary negation (e.g., NOT x)
+``~``            否定の単項演算子 (すなわち NOT x)
 ================ =======================================
 
-Because I ran out of operators to override, there are some additional query
-operations available as methods:
+すでにオーバーライド可能な演算子記号を使い尽くしてしまっているため,
+以下のクエリー演算子をメソッドとして用意しています:
 
 ======================= ===============================================
-Method                  Meaning
+メソッド                 意味
 ======================= ===============================================
-``.in_(value)``         IN lookup (identical to ``<<``).
-``.not_in(value)``      NOT IN lookup.
-``.is_null(is_null)``   IS NULL or IS NOT NULL. Accepts boolean param.
-``.contains(substr)``   Wild-card search for substring.
-``.startswith(prefix)`` Search for values beginning with ``prefix``.
-``.endswith(suffix)``   Search for values ending with ``suffix``.
-``.between(low, high)`` Search for values between ``low`` and ``high``.
-``.regexp(exp)``        Regular expression match (case-sensitive).
-``.iregexp(exp)``       Regular expression match (case-insensitive).
-``.bin_and(value)``     Binary AND.
-``.bin_or(value)``      Binary OR.
-``.concat(other)``      Concatenate two strings or objects using ``||``.
-``.distinct()``         Mark column for DISTINCT selection.
-``.collate(collation)`` Specify column with the given collation.
-``.cast(type)``         Cast the value of the column to the given type.
+``.in_(value)``         IN 探索 (``<<`` と同じ).
+``.not_in(value)``      NOT IN 探索.
+``.is_null(is_null)``   IS NULL または IS NOT NULL. ブール型パラメータも.
+``.contains(substr)``   サブ文字列のワイルドカード検索.
+``.startswith(prefix)`` ``prefix`` で始まる値の検索.
+``.endswith(suffix)``   ``suffix`` で終わる値の検索.
+``.between(low, high)`` ``low`` と ``high`` の間にある値の検索.
+``.regexp(exp)``        正規表現マッチング（大文字小文字を区別する）.
+``.iregexp(exp)``       正規表現マッチング（大文字小文字を区別しない）.
+``.bin_and(value)``     バイナリの AND.
+``.bin_or(value)``      バイナリの OR.
+``.concat(other)``      ``||`` で２つの文字列またはオブジェクトを連結.
+``.distinct()``         そのカラムを DISTINCT select としてマーク.
+``.collate(collation)`` そのカラムに対して指定した照合順序を適用.
+``.cast(type)``         そのカラムの値を指定した型でキャスト.
 ======================= ===============================================
 
-To combine clauses using logical operators, use:
+論理演算を使って句を連結する際に使う演算子:
 
 ================ ==================== ======================================================
-Operator         Meaning              Example
+演算子            意味                 使用例
 ================ ==================== ======================================================
 ``&``            AND                  ``(User.is_active == True) & (User.is_admin == True)``
 ``|`` (pipe)     OR                   ``(User.is_admin) | (User.is_superuser)``
-``~``            NOT (unary negation) ``~(User.username.contains('admin'))``
+``~``            NOT (否定単項演算子)  ``~(User.username.contains('admin'))``
 ================ ==================== ======================================================
 
-Here is how you might use some of these query operators:
+これらのクエリー演算子の使用例:
 
 .. code-block:: python
 
-    # Find the user whose username is "charlie".
+    # username が "charlie" であるユーザを見つける.
     User.select().where(User.username == 'charlie')
 
-    # Find the users whose username is in [charlie, huey, mickey]
+    # username が [charlie, huey, mickey] のいずれかであるユーザを見つける.
     User.select().where(User.username.in_(['charlie', 'huey', 'mickey']))
 
     Employee.select().where(Employee.salary.between(50000, 60000))
@@ -71,164 +71,161 @@ Here is how you might use some of these query operators:
 
     Blog.select().where(Blog.title.contains(search_string))
 
-Here is how you might combine expressions. Comparisons can be arbitrarily
-complex.
+次は式を結合する方法です. 比較はどんなに複雑でも構いません.
 
 .. note::
-  Note that the actual comparisons are wrapped in parentheses. Python's operator
-  precedence necessitates that comparisons be wrapped in parentheses.
+  実際の比較部分は括弧で括られます. Python の演算子の優先度の都合により,
+  比較部分は括弧で括られている必要があります.
 
 .. code-block:: python
 
-    # Find any users who are active administrations.
+    # アクティブな管理者であるユーザを見つける.
     User.select().where(
       (User.is_admin == True) &
       (User.is_active == True))
 
-    # Find any users who are either administrators or super-users.
+    # 管理者もしくはスーパーユーザであるユーザを見つける.
     User.select().where(
       (User.is_admin == True) |
       (User.is_superuser == True))
 
-    # Find any Tweets by users who are not admins (NOT IN).
+    # 管理者でない(NOT IN)ユーザのツイートを見つける.
     admins = User.select().where(User.is_admin == True)
     non_admin_tweets = Tweet.select().where(Tweet.user.not_in(admins))
 
-    # Find any users who are not my friends (strangers).
+    # 自分のfriendsでない（知らない）ユーザを見つける
     friends = User.select().where(User.username.in_(['charlie', 'huey', 'mickey']))
     strangers = User.select().where(User.id.not_in(friends))
 
 .. warning::
-    Although you may be tempted to use python's ``in``, ``and``, ``or`` and
-    ``not`` operators in your query expressions, these **will not work.** The
-    return value of an ``in`` expression is always coerced to a boolean value.
-    Similarly, ``and``, ``or`` and ``not`` all treat their arguments as boolean
-    values and cannot be overloaded.
+    自分のクエリーの中で Python の``in``, ``and``, ``or``, ``not`` といった
+    演算子を使いたくなる誘惑に駆られるかもしれませんが,これらは **動きません.**
+    ``in`` 式の戻り値は,常に強制的にブール値に変更されます.同様に,``and``, ``or``, 
+    ``not`` の引数もブール値になってしまい,これをオーバーオードすることはできません.
 
-    So just remember:
+    このため,以下のことだけを覚えておきましょう:
 
-    * Use ``.in_()`` and ``.not_in()`` instead of ``in`` and ``not in``
-    * Use ``&`` instead of ``and``
-    * Use ``|`` instead of ``or``
-    * Use ``~`` instead of ``not``
-    * Use ``.is_null()`` instead of ``is None`` or ``== None``.
-    * **Don't forget to wrap your comparisons in parentheses when using logical operators.**
+    * ``in`` と ``not in`` の代わりに ``.in_()`` と ``.not_in()`` を使う
+    * ``and`` の代わりに ``&`` を使う
+    *  ``or`` の代わりに ``|`` を使う
+    *  ``not`` の代わりに ``~`` を使う
+    * ``is None`` や ``== None`` の代わりに  ``.is_null()`` を使う.
+    * **論理演算子を使う場合は,比較部分全体を括弧で囲むのを忘れないこと.**
 
-For more examples, see the :ref:`expressions` section.
+これ以外の例については, :ref:`expressions` の章を参照してください.
 
 .. note::
-  **LIKE and ILIKE with SQLite**
+  **SQLite における LIKE とILIKE**
 
-  Because SQLite's ``LIKE`` operation is case-insensitive by default,
-  peewee will use the SQLite ``GLOB`` operation for case-sensitive searches.
-  The glob operation uses asterisks for wildcards as opposed to the usual
-  percent-sign. If you are using SQLite and want case-sensitive partial
-  string matching, remember to use asterisks for the wildcard.
+  SQLite の ``LIKE`` はデフォルトではケース（大文字小文字）を区別しないため,
+  peewee はケースを区別する検索の場合, SQLite の ``GLOB`` 機能を使います.
+  glob 機能ではワイルドカードを表す際,通常のパーセント記号ではなくアスタリスク
+  を使います. もし SQLite を使ってケースを区別する部分一致検索を行う場合,
+  ワイルドカードにはアスタリスクを使うことを覚えておいてください.
 
 Three valued logic
 ------------------
 
-Because of the way SQL handles ``NULL``, there are some special operations
-available for expressing:
+SQL の ``NULL`` を扱うために, 特別な書き方をする表現式があります:
 
 * ``IS NULL``
 * ``IS NOT NULL``
 * ``IN``
 * ``NOT IN``
 
-While it would be possible to use the ``IS NULL`` and ``IN`` operators with the
-negation operator (``~``), sometimes to get the correct semantics you will need
-to explicitly use ``IS NOT NULL`` and ``NOT IN``.
+``IS NULL`` や ``IN`` 演算子を否定演算子 (``~``) と組み合わせて使うことは
+できますが,文脈をはっきりさせるため,明示的に ``IS NOT NULL`` と ``NOT IN``
+を使う必要がある場合があります.
 
-The simplest way to use ``IS NULL`` and ``IN`` is to use the operator
-overloads:
+``IS NULL`` と ``IN`` を使うための最も簡単な方法は,演算子オーバーロード
+を使う方法です:
 
 .. code-block:: python
 
-    # Get all User objects whose last login is NULL.
+    # last login が NULL である User オブジェクトをすべて取得する
     User.select().where(User.last_login >> None)
 
-    # Get users whose username is in the given list.
+    # username が指定されたリストに含まれるユーザを取得する
     usernames = ['charlie', 'huey', 'mickey']
     User.select().where(User.username << usernames)
 
-If you don't like operator overloads, you can call the Field methods instead:
+演算子オーバーロードを使いたくない場合,代わりにフィールドメソッドを呼ぶこともできます:
 
 .. code-block:: python
 
-    # Get all User objects whose last login is NULL.
+    # last login が NULL である User オブジェクトをすべて取得する
     User.select().where(User.last_login.is_null(True))
 
-    # Get users whose username is in the given list.
+    # username が指定されたリストに含まれるユーザを取得する
     usernames = ['charlie', 'huey', 'mickey']
     User.select().where(User.username.in_(usernames))
 
-To negate the above queries, you can use unary negation, but for the correct
-semantics you may need to use the special ``IS NOT`` and ``NOT IN`` operators:
+前述とは反対の意味のクエリーを使いたい場合,単項否定演算子も使えます.ただし
+文脈上正確に意図を示したい場合,特別な ``IS NOT`` / ``NOT IN`` 演算子が使えます:
 
 .. code-block:: python
 
-    # Get all User objects whose last login is *NOT* NULL.
+    # last login が NULL *でない* User オブジェクトをすべて取得する
     User.select().where(User.last_login.is_null(False))
 
-    # Using unary negation instead.
+    # これを単項否定演算子を使って行う.
     User.select().where(~(User.last_login >> None))
 
-    # Get users whose username is *NOT* in the given list.
+    # username が指定されたリストに *含まれない* ユーザを取得する
     usernames = ['charlie', 'huey', 'mickey']
     User.select().where(User.username.not_in(usernames))
 
-    # Using unary negation instead.
+    # これを単項否定演算子を使って行う.
     usernames = ['charlie', 'huey', 'mickey']
     User.select().where(~(User.username << usernames))
 
 .. _custom-operators:
 
-Adding user-defined operators
+ユーザ定義演算子を追加する
 -----------------------------
 
-Because I ran out of python operators to overload, there are some missing
-operators in peewee, for instance ``modulo``. If you find that you need to
-support an operator that is not in the table above, it is very easy to add your
-own.
+オーバーロードできそうな Python の演算子を使い尽くしてしまったため,peewee
+にはたとえば ``剰余`` のように、存在しない演算子があります.前述の表の中に
+自分が使いたい演算子がなかった場合,簡単に自分専用の演算子を追加できます.
 
-Here is how you might add support for ``modulo`` in SQLite:
+SQlite で ``剰余`` サポートを追加するには以下のようにします:
 
 .. code-block:: python
 
     from peewee import *
-    from peewee import Expression # the building block for expressions
+    from peewee import Expression # 式のビルド部分
 
     def mod(lhs, rhs):
         return Expression(lhs, '%', rhs)
 
-Now you can use these custom operators to build richer queries:
+これらのカスタム演算子を使うことで、より直感的なクエリーをビルド(構築)
+できるようになりました:
 
 .. code-block:: python
 
-    # Users with even ids.
+    # id が奇数のユーザ
     User.select().where(mod(User.id, 2) == 0)
 
-For more examples check out the source to the ``playhouse.postgresql_ext``
-module, as it contains numerous operators specific to postgresql's hstore.
+これ以外の使用例については ``playhouse.postgresql_ext`` モジュールの
+ソースを参照してみてください.この中には postgresql の hstore に固有の
+演算子が多数含まれています.
 
 .. _expressions:
 
-Expressions
------------
+表現式(Expressions)
+-------------------
 
-Peewee is designed to provide a simple, expressive, and pythonic way of
-constructing SQL queries. This section will provide a quick overview of some
-common types of expressions.
+Peewee はシンプルで表現力豊かな,かつpython的な方法によるSQLクエリー構築が
+できるようにデザインされています.この章では一般的な表現式についての概観を
+みてみましょう.
 
-There are two primary types of objects that can be composed to create
-expressions:
+Peewee では２つのタイプのオブジェクトを組み合わせて表現式を生成します:
 
-* :py:class:`Field` instances
-* SQL aggregations and functions using :py:class:`fn`
+* :py:class:`Field` インスタンス
+* SQL の集約関数と :py:class:`fn` を使った関数
 
-We will assume a simple "User" model with fields for username and other things.
-It looks like this:
+ユーザ名その他の項目を持つ,シンプルな "User" モデルを考えてみましょう.
+それは以下のようになります:
 
 .. code-block:: python
 
@@ -240,75 +237,78 @@ It looks like this:
         login_count = IntegerField()
         failed_logins = IntegerField()
 
-Comparisons use the :ref:`query-operators`:
+比較の際は :ref:`query-operators` を使います:
 
 .. code-block:: python
 
-    # username is equal to 'charlie'
+    # username が 'charlie' と等しい
     User.username == 'charlie'
 
-    # user has logged in less than 5 times
+    # ログイン回数が５回未満のユーザ
     User.login_count < 5
 
-Comparisons can be combined using **bitwise** *and* and *or*. Operator
-precedence is controlled by python and comparisons can be nested to an
-arbitrary depth:
+比較の際は **ビットごとの** **and** と **or** を組み合わせます.
+演算子の優先順位は python によって制御され,比較は入れ子にして
+任意の深さにできます:
 
 .. code-block:: python
 
-    # User is both and admin and has logged in today
+    # admin でかつ今日ログインしたユーザ
     (User.is_admin == True) & (User.last_login >= today)
 
-    # User's username is either charlie or charles
+    # ユーザ名が charlie または charles
     (User.username == 'charlie') | (User.username == 'charles')
 
-Comparisons can be used with functions as well:
+比較は関数を使って行うこともできます:
 
 .. code-block:: python
 
-    # user's username starts with a 'g' or a 'G':
+    # ユーザ名が 'g' または 'G' で始まるユーザ
     fn.Lower(fn.Substr(User.username, 1, 1)) == 'g'
 
-We can do some fairly interesting things, as expressions can be compared
-against other expressions. Expressions also support arithmetic operations:
+表現式を別の表現式と比較することができるので,ちょっとおもしろいことをやってみましょう.
+表現式では算術演算子もサポートしています:
 
 .. code-block:: python
 
-    # users who entered the incorrect more than half the time and have logged
-    # in at least 10 times
+    # ログイン失敗の回数が成功回数の半分を超えるものの,
+    # 少なくとも10回はログインしたことがあるユーザ
     (User.failed_logins > (User.login_count * .5)) & (User.login_count > 10)
 
-Expressions allow us to do *atomic updates*:
+表現式では *アトミック(途中の割り込みがないことが保証されている)な更新* が行えます:
 
 .. code-block:: python
 
-    # when a user logs in we want to increment their login count:
+    # ユーザがログインした時,それらのログイン回数をインクリメントしたい:
     User.update(login_count=User.login_count + 1).where(User.id == user_id)
 
-Expressions can be used in all parts of a query, so experiment!
+表現式はクエリー内のすべての部分で使えます.これは新機軸です!
 
-Row values
-^^^^^^^^^^
 
-Many databases support `row values <https://www.sqlite.org/rowvalue.html>`_,
-which are similar to Python `tuple` objects. In Peewee, it is possible to use
-row-values in expressions via :py:class:`Tuple`. For example,
+行の値(row values)
+^^^^^^^^^^^^^^^^^^
+
+多くのデータベースでは `行の値(row values) <https://www.sqlite.org/rowvalue.html>`_
+をサポートしていますが,これは python の `タプル(tuple)` オブジェクトとよく似ています.
+Peewee では表現式における行の値は :py:class:`Tuple` 経由で利用可能です.
+以下に例を示します.
 
 .. code-block:: python
 
-    # If for some reason your schema stores dates in separate columns ("year",
-    # "month" and "day"), you can use row-values to find all rows that happened
-    # in a given month:
+    # もしあなたのスキーマで何らかの理由で日付を ("year", "month", "day") という
+    # 別々のカラムに格納している場合でも,行の値を使って指定月に属するすべての行を
+    # 見つけることが可能です:
     Tuple(Event.year, Event.month) == (2019, 1)
 
-The more common use for row-values is to compare against multiple columns from
-a subquery in a single expression. There are other ways to express these types
-of queries, but row-values may offer a concise and readable approach.
+行の値に関するより一般的な使い方を,単一表現式の中のサブクエリーから生成される
+複数カラムの場合と比較してみましょう.これらのタイプのクエリーを表現するための
+他の方法もありますが,行の値を利用する方法は完結で読みやすいアプローチです.
 
-For example, assume we have a table "EventLog" which contains an event type, an
-event source, and some metadata. We also have an "IncidentLog", which has
-incident type, incident source, and metadata columns. We can use row-values to
-correlate incidents with certain events:
+ここでは例として "EventLog" というテーブルがあり,この中にはイベントタイプと
+イベントソース,その他のメタデータが入っているとします.さらに "IncidentLog"
+もあり,これにはインシデントタイプ,インシデントソース,メタデータのカラムが
+入っています.行の値を使えば,インシデントと特定のイベントを関連付けることが
+可能です:
 
 .. code-block:: python
 
@@ -324,35 +324,37 @@ correlate incidents with certain events:
         traceback = TextField()
         timestamp = TimestampField()
 
-    # Get a list of all the incident types and sources that have occured today.
+    # 本日発生したインシデントのタイプとソースの一覧をすべて取得する
     incidents = (IncidentLog
                  .select(IncidentLog.incident_type, IncidentLog.source)
                  .where(IncidentLog.timestamp >= datetime.date.today()))
 
-    # Find all events that correlate with the type and source of the
-    # incidents that occured today.
+    # 本日発生したイベントの中で,タイプとソースがインシデントに関連する
+    # ものをすべて見つける.
     events = (EventLog
               .select()
               .where(Tuple(EventLog.event_type, EventLog.source).in_(incidents))
               .order_by(EventLog.timestamp))
 
-Other ways to express this type of query would be to use a :ref:`join <relationships>`
-or to :ref:`join on a subquery <join-subquery>`. The above example is there
-just to give you and idea how :py:class:`Tuple` might be used.
+このタイプのクエリーを表現するための他の方法としては, :ref:`join <relationships>`
+や :ref:`サブクエリーに対する join <join-subquery>` が使えます.
+上記の例は,単に :py:class:`Tuple` を使うためのアイデアを提供したに過ぎません.
 
-You can also use row-values to update multiple columns in a table, when the new
-data is derived from a subquery. For an example, see `here <https://www.sqlite.org/rowvalue.html#update_multiple_columns_of_a_table_based_on_a_query>`_.
+新しいデータがサブクエリーから発生した場合,行の値を使ってテーブル内の複数のカラムを
+更新することもできます.この利用例としては
+`here <https://www.sqlite.org/rowvalue.html#update_multiple_columns_of_a_table_based_on_a_query>`_
+を参照してください.
 
-SQL Functions
+SQL 関数
 -------------
 
-SQL functions, like ``COUNT()`` or ``SUM()``, can be expressed using the
-:py:func:`fn` helper:
+``COUNT()`` や ``SUM()`` といった SQL 関数は, :py:func:`fn` ヘルパー: を
+使って表現できます:
 
 .. code-block:: python
 
-    # Get all users and the number of tweets they've authored. Sort the
-    # results from most tweets -> fewest tweets.
+    # すべてのユーザと,彼らがつぶやいた多数のツイートを取得する.
+    # 結果はツイート数の多い方から降順にソートする.
     query = (User
              .select(User, fn.COUNT(Tweet.id).alias('tweet_count'))
              .join(Tweet, JOIN.LEFT_OUTER)
@@ -361,82 +363,84 @@ SQL functions, like ``COUNT()`` or ``SUM()``, can be expressed using the
     for user in query:
         print('%s -- %s tweets' % (user.username, user.tweet_count))
 
-The ``fn`` helper exposes any SQL function as if it were a method. The
-parameters can be fields, values, subqueries, or even nested functions.
+``fn`` ヘルパーは,任意の SQL 関数をあたかもメソッドであるかのように見せて
+くれます.パラメータはフィールド,値,サブクエリーに加えて,さらにネストした
+関数も指定できます。
 
-Nesting function calls
+
+ネストした関数呼び出し
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Suppose you need to want to get a list of all users whose username begins with
-*a*. There are a couple ways to do this, but one method might be to use some
-SQL functions like *LOWER* and *SUBSTR*. To use arbitrary SQL functions, use
-the special :py:func:`fn` object to construct queries:
+ここであなたは,ユーザ名が *a* で始まるユーザの一覧を取得する必要があるとします.
+このやり方はいくつかありますが,*LOWER* や *SUBSTR* といった SQL 関数を使える
+メソッドが1つあります.任意の SQL 関数を使いたい場合は, :py:func:`fn` という
+特別なオブジェクトを使ってクエリーを構築します.
 
 .. code-block:: python
 
-    # Select the user's id, username and the first letter of their username, lower-cased
+    # ユーザの id とユーザ名, およびユーザ名の先頭1文字を小文字にした
+    # ものを select する
     first_letter = fn.LOWER(fn.SUBSTR(User.username, 1, 1))
     query = User.select(User, first_letter.alias('first_letter'))
 
-    # Alternatively we could select only users whose username begins with 'a'
+    # 別の方法として,ユーザ名が 'a' で始まるユーザだけを select することも可能
     a_users = User.select().where(first_letter == 'a')
 
     >>> for user in a_users:
     ...    print(user.username)
 
-SQL Helper
-----------
+SQL ヘルパー
+------------
 
-There are times when you may want to simply pass in some arbitrary sql. You can
-do this using the special :py:class:`SQL` class. One use-case is when
-referencing an alias:
+単に任意の SQL 文を渡したいという場合もあると思います.この場合,特別な
+:py:class:`SQL` クラスが使えます.ユースケースのひとつして,別名を参照
+したい場合を示します:
 
 .. code-block:: python
 
-    # We'll query the user table and annotate it with a count of tweets for
-    # the given user
+    # ユーザテーブルに問い合わせを行い,特定のユーザについてツイート数の
+    # 注釈を付ける.
     query = (User
              .select(User, fn.Count(Tweet.id).alias('ct'))
              .join(Tweet)
              .group_by(User))
 
-    # Now we will order by the count, which was aliased to "ct"
+    # 次に "ct" という別名を付けられた回数フィールドでソートする.
     query = query.order_by(SQL('ct'))
 
-    # You could, of course, also write this as:
+    # これは当然以下のようにも書ける:
     query = query.order_by(fn.COUNT(Tweet.id))
 
-There are two ways to execute hand-crafted SQL statements with peewee:
+Peewee で手作りの SQL ステートメントを実行したい場合,以下の２つの方法がある:
 
-1. :py:meth:`Database.execute_sql` for executing any type of query
-2. :py:class:`RawQuery` for executing ``SELECT`` queries and returning model
-   instances.
+1. 任意のタイプのクエリーを実行するための :py:meth:`Database.execute_sql`
+2. ``SELECT`` クエリーを発行してモデルのインスタンスを返す :py:class:`RawQuery`
 
-Security and SQL Injection
---------------------------
+セキュリティと SQL インジェクション
+---------------------------------------
 
-By default peewee will parameterize queries, so any parameters passed in by the
-user will be escaped. The only exception to this rule is if you are writing a
-raw SQL query or are passing in a ``SQL`` object which may contain untrusted
-data. To mitigate this, ensure that any user-defined data is passed in as a
-query parameter and not part of the actual SQL query:
+peewee はデフォルトでクエリーをパラメータ化するため,ユーザから渡されたパラメータは
+すべてエスケープされます.このルールにおける唯一の例外は,生の SQL クエリーを書いたり,
+信頼できないデータを含む恐れがある ``SQL`` オブジェクトを渡す場合です.危険性を軽減
+するため,いかなるユーザ定義データもクエリーパラメータとして渡し,実際の SQL クエリー
+の一部として渡すことがないようにしてください:
 
 .. code-block:: python
 
-    # Bad! DO NOT DO THIS!
+    # やっちゃダメ！
     query = MyModel.raw('SELECT * FROM my_table WHERE data = %s' % (user_data,))
 
-    # Good. `user_data` will be treated as a parameter to the query.
+    # 大丈夫. `user_data` はクエリーへのパラメータとして扱われます.
     query = MyModel.raw('SELECT * FROM my_table WHERE data = %s', user_data)
 
-    # Bad! DO NOT DO THIS!
+    # やっちゃダメ！
     query = MyModel.select().where(SQL('Some SQL expression %s' % user_data))
 
-    # Good. `user_data` will be treated as a parameter.
+    # 大丈夫. `user_data` はパラメータとして扱われます.
     query = MyModel.select().where(SQL('Some SQL expression %s', user_data))
 
 .. note::
-    MySQL and Postgresql use ``'%s'`` to denote parameters. SQLite, on the
-    other hand, uses ``'?'``. Be sure to use the character appropriate to your
-    database. You can also find this parameter by checking
-    :py:attr:`Database.param`.
+    MySQL と Postgresql は ``'%s'`` をパラメータの印として使用します.一方
+    SQLite は ``'?'`` を使います.お使いのデータベースに適した文字を使うように
+    心がけてください.このパラメータは :py:attr:`Database.param` をチェックする
+    ことで見つけらることができます.

@@ -1,21 +1,20 @@
 .. _models:
 
-Models and Fields
-=================
+モデルとフィールド
+==================
 
-:py:class:`Model` classes, :py:class:`Field` instances and model instances all
-map to database concepts:
+データベースのコンセプトにマップされる,すべての :py:class:`Model` クラス,
+:py:class:`Field` インスタンスおよび model インスタンス:
 
-================= =================================
-Thing             Corresponds to...
-================= =================================
-Model class       Database table
-Field instance    Column on a table
-Model instance    Row in a database table
-================= =================================
+=================   =================================
+対象                対応するもの...
+=================   =================================
+Model クラス        データベーステーブル
+Field インスタンス  テーブルのカラム
+Model インスタンス   データベーステーブルの行
+=================   =================================
 
-The following code shows the typical way you will define your database
-connection and model classes.
+データベースの接続とモデルを定義するための典型的なやり方は以下の通りです.
 
 .. _blog-models:
 
@@ -39,15 +38,15 @@ connection and model classes.
         created_date = DateTimeField(default=datetime.datetime.now)
         is_published = BooleanField(default=True)
 
-1. Create an instance of a :py:class:`Database`.
+1. :py:class:`Database` のインスタンスを作成する.
 
     .. code-block:: python
 
         db = SqliteDatabase('my_app.db')
 
-    The ``db`` object will be used to manage the connections to the Sqlite
-    database. In this example we're using :py:class:`SqliteDatabase`, but you
-    could also use one of the other :ref:`database engines <database>`.
+    ``db`` オブジェクトは Sqlite データベースへの接続を管理するために使われます.
+    この例では :py:class:`SqliteDatabase` を使っていますが,
+    :ref:`database engines <database>` にある他のものを使っても構いません.
 
 2. Create a base model class which specifies our database.
 

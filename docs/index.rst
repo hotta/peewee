@@ -8,13 +8,13 @@ peewee
 
 .. image:: peewee3-logo.png
 
-Peewee is a simple and small ORM. It has few (but expressive) concepts, making
-it easy to learn and intuitive to use.
+Peewee はシンプルで小さな ORM です.概念的な話は(表現豊かながら)多くはなく,
+学びやすく直感的に利用できるようにしています.
 
-* a small, expressive ORM
+* 小さくかつ表現豊かな ORM
 * python 2.7+ and 3.4+ (developed with 3.6)
-* supports sqlite, mysql, postgresql and cockroachdb
-* :ref:`tons of extensions <playhouse>`
+* sqlite, mysql, postgresql, cockroachdb をサポート
+* :ref:`多数のエクステンション <playhouse>`
 
 .. image:: postgresql.png
     :target: peewee/database.html#using-postgresql
@@ -32,16 +32,16 @@ it easy to learn and intuitive to use.
     :target: peewee/database.html#using-crdb
     :alt: cockroachdb
 
-Peewee's source code hosted on `GitHub <https://github.com/coleifer/peewee>`_.
+Peewee のソースコードは `GitHub <https://github.com/coleifer/peewee>`_ でホストされています.
 
-New to peewee? These may help:
+Peewee は初めてですか？以下がお役に立てるかもしれません:
 
-* :ref:`Quickstart <quickstart>`
-* :ref:`Example twitter app <example-app>`
-* :ref:`Using peewee interactively <interactive>`
-* :ref:`Models and fields <models>`
-* :ref:`Querying <querying>`
-* :ref:`Relationships and joins <relationships>`
+* :ref:`クイックスタート <quickstart>`
+* :ref:`ツイッターアプリの例 <example-app>`
+* :ref:`peewee を会話的に使う <interactive>`
+* :ref:`モデルとフィールド <models>`
+* :ref:`クエリーの発行 <querying>`
+* :ref:`リレーションとJOIN <relationships>`
 
 Contents:
 ---------
@@ -71,7 +71,15 @@ Contents:
 Note
 ----
 
-If you find any bugs, odd behavior, or have an idea for a new feature please don't hesitate to `open an issue <https://github.com/coleifer/peewee/issues?state=open>`_ on GitHub or `contact me <http://charlesleifer.com/contact/>`_.
+何かバグや妙な動きを見つけた場合,もしくは新しいアイデアがある場合,GitHubで
+`open an issue <https://github.com/coleifer/peewee/issues?state=open>`_ するか、
+または `contact me <http://charlesleifer.com/contact/>`_ に連絡してください.
+
+日本語マニュアルに関する誤植や改善提案については,
+`open an issue(日本語マニュアル用) <https://github.com/hotta/peewee/issues>`_ 
+までお願いします.翻訳後のサイトは 
+`https://net-newbie.com/peewee/ <https://net-newbie.com/peewee/>`_ 
+にあります.
 
 Indices and tables
 ==================

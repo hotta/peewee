@@ -1,26 +1,25 @@
 .. _query_examples:
 
-Query Examples
+クエリーの例
 ==============
 
-These query examples are taken from the site `PostgreSQL Exercises
-<https://pgexercises.com/>`_. A sample data-set can be found on the `getting
-started page <https://pgexercises.com/gettingstarted.html>`_.
+以下のクエリーの例は `PostgreSQL Exercises <https://pgexercises.com/>`_
+のサイトから拝借してきたものです.サンプルのデータセットは
+`getting started page <https://pgexercises.com/gettingstarted.html>`_
+にあります.
 
-Here is a visual representation of the schema used in these examples:
+これらの例で使われているスキーマのビジュアル表現です:
 
 .. image:: schema-horizontal.png
 
-Model Definitions
+モデルの定義
 -----------------
 
-To begin working with the data, we'll define the model classes that correspond
-to the tables in the diagram.
+データを扱うには,この図にあるテーブルに対応するモデルクラスを定義してあげる必要があります.
 
 .. note::
-    In some cases we explicitly specify column names for a particular field.
-    This is so our models are compatible with the database schema used for the
-    postgres exercises.
+    特定のフィールドについて,明示的にカラム名を指定しているケースがあります.
+    これにより, 私達のモデルは postgres Exercises で使われるデータベーススキーマとの互換性があります.
 
 .. code-block:: python
 
@@ -35,7 +34,7 @@ to the tables in the diagram.
             database = db
 
     class Member(BaseModel):
-        memid = AutoField()  # Auto-incrementing primary key.
+        memid = AutoField()     # 自動インクリメントのプライマリキー
         surname = CharField()
         firstname = CharField()
         address = CharField(max_length=300)
@@ -49,7 +48,7 @@ to the tables in the diagram.
             table_name = 'members'
 
 
-    # Conveniently declare decimal fields suitable for storing currency.
+    # 便宜上,通貨を格納するのに適した decimal のフィールドを宣言しています.
     MoneyField = partial(DecimalField, decimal_places=2)
 
 
@@ -76,34 +75,34 @@ to the tables in the diagram.
             table_name = 'bookings'
 
 
-Schema Creation
+スキーマの生成
 ---------------
 
-If you downloaded the SQL file from the PostgreSQL Exercises site, then you can
-load the data into a PostgreSQL database using the following commands::
+PostgreSQL Exercises のサイトから SQL ファイルをダウンロードしてきた場合は,
+以下のコマンドを使って PostgreSQL データベースに対してデータをロードできます::
 
     createdb peewee_test
     psql -U postgres -f clubdata.sql -d peewee_test -x -q
 
-To create the schema using Peewee, without loading the sample data, you can run
-the following:
+Peewee でサンプルデータのロードを行わずにスキーマを生成する場合は以下の
+コマンドを使ってください:
 
 .. code-block:: python
 
-    # Assumes you have created the database "peewee_test" already.
+    # すでにデータベース "peewee_test" があるものとします.
     db.create_tables([Member, Facility, Booking])
 
 
-Basic Exercises
+基本練習
 ---------------
 
-This category deals with the basics of SQL. It covers select and where clauses,
-case expressions, unions, and a few other odds and ends.
+このカテゴリーでは SQL の基礎について学びます.ここでカバーするのは select
+と where 句, case 表現, union その他いくつかのこまごましたものです.
 
-Retrieve everything
+すべてを取り出す
 ^^^^^^^^^^^^^^^^^^^
 
-Retrieve all information from facilities table.
+facilities（施設）テーブルからすべての情報を取り出します.
 
 .. code-block:: sql
 
@@ -111,14 +110,14 @@ Retrieve all information from facilities table.
 
 .. code-block:: python
 
-    # By default, when no fields are explicitly passed to select(), all fields
-    # will be selected.
+    # デフォルトでは, select() に対してフィールドが明示的に渡されない場合,
+    # すべてのフィールドが取り出されます.
     query = Facility.select()
 
-Retrieve specific columns from a table
+テーブルから特定のカラムを取り出す
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Retrieve names of facilities and cost to members.
+施設名とメンバーの料金を取り出します.
 
 .. code-block:: sql
 
@@ -128,14 +127,14 @@ Retrieve names of facilities and cost to members.
 
     query = Facility.select(Facility.name, Facility.membercost)
 
-    # To iterate:
+    # 繰り返し(イテレータ)で取り出す場合:
     for facility in query:
         print(facility.name)
 
-Control which rows are retrieved
+取り出すべき行を制御する
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Retrieve list of facilities that have a cost to members.
+施設からメンバー料金があるもののリストを取り出します.
 
 .. code-block:: sql
 
@@ -145,12 +144,12 @@ Retrieve list of facilities that have a cost to members.
 
     query = Facility.select().where(Facility.membercost > 0)
 
-Control which rows are retrieved - part 2
+取り出すべき行をコントロールする - part 2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Retrieve list of facilities that have a cost to members, and that fee is less
-than 1/50th of the monthly maintenance cost. Return id, name, cost and
-monthly-maintenance.
+施設の中でメンバーの料金があるものについて,その料金がひと月の維持費の50分の1
+より小さなものに限ったリストを取り出します.
+id, name, cost, monthlymaintenance が返されます.
 
 .. code-block:: sql
 
@@ -167,11 +166,11 @@ monthly-maintenance.
                  (Facility.membercost > 0) &
                  (Facility.membercost < (Facility.monthlymaintenance / 50))))
 
-Basic string searches
+基本的な文字列検索
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-How can you produce a list of all facilities with the word 'Tennis' in their
-name?
+名前の中に 'Tennis' という単語を含む施設の一覧を取得するにはどうすれば
+よいでしょうか？
 
 .. code-block:: sql
 
@@ -181,15 +180,15 @@ name?
 
     query = Facility.select().where(Facility.name.contains('tennis'))
 
-    # OR use the exponent operator. Note: you must include wildcards here:
+    # または指数演算子を使う. ワイルドカードを含む必要があることに注意:
     query = Facility.select().where(Facility.name ** '%tennis%')
 
 
-Matching against multiple possible values
+複数の候補値に対するマッチング
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-How can you retrieve the details of facilities with ID 1 and 5? Try to do it
-without using the OR operator.
+施設のうちの ID が 1 または 5 のものの詳細を取り出すにはどうすればよいでしょう？
+OR 演算子を使わずにやってみてください.
 
 .. code-block:: sql
 
@@ -199,16 +198,16 @@ without using the OR operator.
 
     query = Facility.select().where(Facility.facid.in_([1, 5]))
 
-    # OR:
+    # または:
     query = Facility.select().where((Facility.facid == 1) |
                                     (Facility.facid == 5))
 
-Classify results into buckets
+結果を分類してバケツに入れる
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-How can you produce a list of facilities, with each labelled as 'cheap' or
-'expensive' depending on if their monthly maintenance cost is more than $100?
-Return the name and monthly maintenance of the facilities in question.
+施設について,その維持費の月額が $100 を超えるかどうかで 'cheap' または
+'expensive' ラベルが付いたリストを取得するにはどうすればよいでしょうか？
+それぞれの施設の名前と,その維持の状況を返します.
 
 .. code-block:: sql
 
@@ -221,15 +220,14 @@ Return the name and monthly maintenance of the facilities in question.
     cost = Case(None, [(Facility.monthlymaintenance > 100, 'expensive')], 'cheap')
     query = Facility.select(Facility.name, cost.alias('cost'))
 
-.. note:: See documentation :py:class:`Case` for more examples.
+.. note:: 詳細は :py:class:`Case` のドキュメントを参照してください.
 
 
-Working with dates
+日付の操作
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-How can you produce a list of members who joined after the start of September
-2012? Return the memid, surname, firstname, and joindate of the members in
-question.
+2012年9月以降に加入したメンバーのリストを取得するにはどうすればよいでしょうか？
+それぞれのメンバーの memid, surname, firstname, および加入日を返します.
 
 .. code-block:: sql
 
@@ -243,11 +241,11 @@ question.
              .where(Member.joindate >= datetime.date(2012, 9, 1)))
 
 
-Removing duplicates, and ordering results
+重複を排除して結果をソートする
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-How can you produce an ordered list of the first 10 surnames in the members
-table? The list must not contain duplicates.
+メンバーテーブルから先頭10個の名字を取り出して,それをソートしたリストを
+作るにはどうしたらよいでしょうか？リストは重複してはならないものとします.
 
 .. code-block:: sql
 
@@ -262,11 +260,10 @@ table? The list must not contain duplicates.
              .distinct())
 
 
-Combining results from multiple queries
+複数のクエリーの結果を結合する
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You, for some reason, want a combined list of all surnames and all facility
-names.
+何らかの理由により,すべての名字とすべての設備名をまとめたリストがほしいとします.
 
 .. code-block:: sql
 
@@ -278,18 +275,18 @@ names.
     rhs = Facility.select(Facility.name)
     query = lhs | rhs
 
-Queries can be composed using the following operators:
+以下の演算子を使ってクエリーを組み合わせることができます:
 
 * ``|`` - ``UNION``
 * ``+`` - ``UNION ALL``
 * ``&`` - ``INTERSECT``
 * ``-`` - ``EXCEPT``
 
-Simple aggregation
+シンプルな集約
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You'd like to get the signup date of your last member. How can you retrieve
-this information?
+最新のメンバーがサインアップした日付を知りたいとします.
+この情報をどうやって持ってくればいいでしょうか？
 
 .. code-block:: sql
 
@@ -298,14 +295,14 @@ this information?
 .. code-block:: python
 
     query = Member.select(fn.MAX(Member.joindate))
-    # To conveniently obtain a single scalar value, use "scalar()":
+    # 手軽にスカラー値を取得したい場合は "scalar()" を使う:
     # max_join_date = query.scalar()
 
-More aggregation
+さらなる集約
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You'd like to get the first and last name of the last member(s) who signed up
-- not just the date.
+最も最近サインアップしたメンバーの加入日だけでなく,名前と名字も合わせて
+取得したいとします.
 
 .. code-block:: sql
 
@@ -314,7 +311,7 @@ You'd like to get the first and last name of the last member(s) who signed up
 
 .. code-block:: python
 
-    # Use "alias()" to reference the same table multiple times in a query.
+    # クエリーの中で同じテーブルを複数回参照する場合は "alias()" を使う.
     MemberAlias = Member.alias()
     subq = MemberAlias.select(fn.MAX(MemberAlias.joindate))
     query = (Member
@@ -322,23 +319,21 @@ You'd like to get the first and last name of the last member(s) who signed up
              .where(Member.joindate == subq))
 
 
-Joins and Subqueries
+JOIN とサブクエリー
 --------------------
 
-This category deals primarily with a foundational concept in relational
-database systems: joining. Joining allows you to combine related information
-from multiple tables to answer a question. This isn't just beneficial for ease
-of querying: a lack of join capability encourages denormalisation of data,
-which increases the complexity of keeping your data internally consistent.
+このカテゴリーでは,主にリレーショナルデータベースにおける基本概念である結合(join)について学びます.
+結合を使うと,複数のテーブルの関連する情報をまとめて質問に答えることが可能です.
+これは,クエリーを簡単にするために役に立つだけではありません:
+join 機能がないとデータを非正規化せざるを得なくなり,複雑さが増すことでデータの内部的な整合性を保つことが困難になります.
 
-This topic covers inner, outer, and self joins, as well as spending a little
-time on subqueries (queries within queries).
+このトピックでは内部,外部,自己結合に加えてサブクエリー(クエリーの中のクエリー)にも多少説明の時間を割くことにします.
 
-Retrieve the start times of members' bookings
+メンバーの予約開始時刻を取り出す
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-How can you produce a list of the start times for bookings by members named
-'David Farrell'?
+'David Farrell' という名前のメンバーの予約開始時刻のリストを取得するには
+どうすればよいでしょうか？
 
 .. code-block:: sql
 
@@ -355,12 +350,12 @@ How can you produce a list of the start times for bookings by members named
                     (Member.firstname == 'David')))
 
 
-Work out the start times of bookings for tennis courts
+テニスコートの予約開始時刻を使って練習
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-How can you produce a list of the start times for bookings for tennis courts,
-for the date '2012-09-21'? Return a list of start time and facility name
-pairings, ordered by the time.
+'2012-09-21' という日付でテニスコートの予約開始時刻のリストを取得するには
+どうすればよいでしょうか？開始時刻と施設名のペアを,時刻でソートして返します.
+
 
 .. code-block:: sql
 
@@ -381,17 +376,16 @@ pairings, ordered by the time.
                  Facility.name.startswith('Tennis'))
              .order_by(Booking.starttime, Facility.name))
 
-    # To retrieve the joined facility's name when iterating:
+    # 結合された施設名をイテレータを使って取り出す:
     for booking in query:
         print(booking.starttime, booking.facility.name)
 
 
-Produce a list of all members who have recommended another member
+他のメンバーを推薦したことがあるメンバーを取り出す
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-How can you output a list of all members who have recommended another member?
-Ensure that there are no duplicates in the list, and that results are ordered
-by (surname, firstname).
+他のメンバーを推薦したことがあるメンバーのリストを取り出すにはどうすればよいでしょうか？
+リストには重複がないものとし,結果は(surname, firstname)でソートされているものとします.
 
 .. code-block:: sql
 
@@ -409,12 +403,11 @@ by (surname, firstname).
              .order_by(Member.surname, Member.firstname))
 
 
-Produce a list of all members, along with their recommender
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+すべてのメンバーのリストに合わせて,その推薦者も同時に取り出す
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-How can you output a list of all members, including the individual who
-recommended them (if any)? Ensure that results are ordered by (surname,
-firstname).
+メンバーの中で（もしあれば）その人の推薦者も合わせてリスト表示するには
+どうすればよいでしょうか？結果は(surname,firstname)でソートされるものとします。
 
 .. code-block:: sql
 
@@ -438,13 +431,12 @@ firstname).
             print('  ', m.recommendedby.firstname, m.recommendedby.surname)
 
 
-Produce a list of all members who have used a tennis court
+テニスコートを使ったことがあるメンバーを取り出す
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-How can you produce a list of all members who have used a tennis court?
-Include in your output the name of the court, and the name of the member
-formatted as a single column. Ensure no duplicate data, and order by the
-member name.
+テニスコートを使ったことがあるメンバーのリストを取り出すにはどうすればよいでしょうか？
+出力にはコートの名前とメンバー名が結合して１カラムになったものを含みます.
+またデータには重複がなく,またメンバー名でソートされているものとします.
 
 .. code-block:: sql
 
@@ -467,15 +459,14 @@ member name.
              .distinct())
 
 
-Produce a list of costly bookings
+値段が高い予約のリストを取り出す
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-How can you produce a list of bookings on the day of 2012-09-14 which will
-cost the member (or guest) more than $30? Remember that guests have different
-costs to members (the listed costs are per half-hour 'slot'), and the guest
-user is always ID 0. Include in your output the name of the facility, the
-name of the member formatted as a single column, and the cost. Order by
-descending cost, and do not use any subqueries.
+2012-09-14 の予約のうち,メンバー(もしくはゲスト)料金が $30 を超えるものの
+リストを取り出すにはどうすればよいでしょうか？ゲストはメンバー(リストに現れる
+料金は30分'時間枠'単位)とは別の料金体系を持っており,ゲストユーザーの ID は
+常に 0 です.出力には施設名とメンバー名が結合して1カラムになったものと料金を
+含みます.ソート順は利用料の降順であり,サブクエリーは使わないことにします.
 
 .. code-block:: sql
 
@@ -508,18 +499,17 @@ descending cost, and do not use any subqueries.
                  (cost > 30))
              .order_by(SQL('cost').desc()))
 
-    # To iterate over the results, it might be easiest to use namedtuples:
+    # 結果をイテレートする際は,名前付きタプルが最も扱いやすいでしょう:
     for row in query.namedtuples():
         print(row.member, row.facility, row.cost)
 
 
-Produce a list of all members, along with their recommender, using no joins.
+join を使ってすべてのメンバーのリストを推薦者と合わせて取り出す
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-How can you output a list of all members, including the individual who
-recommended them (if any), without using any joins? Ensure that there are no
-duplicates in the list, and that each firstname + surname pairing is
-formatted as a column and ordered.
+メンバーのうち(もしあれば)他の人を推薦したという情報を,JOINを使わずに取り出す
+にはどうすればよいでしょうか？結果には重複がなく,それぞれの firstname + surname 
+のペアが１カラムにまとめられ,かつそれを使ってソートされているものとします.
 
 .. code-block:: sql
 
@@ -540,12 +530,13 @@ formatted as a column and ordered.
              .order_by(fullname))
 
 
-Produce a list of costly bookings, using a subquery
+サブクエリーを使って高価な予約のリストを取り出す
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The "Produce a list of costly bookings" exercise contained some messy logic: we
-had to calculate the booking cost in both the WHERE clause and the CASE
-statement. Try to simplify this calculation using subqueries.
+"高価な予約のリストを取り出す" 練習では,若干面倒なロジックを抑制しています:
+予約料金を計算は WHERE 句と CASE 文の両方で行う必要がありました.
+これを単純化するために,サブクエリーを使って計算しています.
+
 
 .. code-block:: sql
 
@@ -582,30 +573,29 @@ statement. Try to simplify this calculation using subqueries.
              .where(iq.c.cost > 30)
              .order_by(SQL('cost').desc()))
 
-    # To iterate, try using dicts:
+    # イテレートする際はdicts(辞書)を使ってみてください:
     for row in query.dicts():
         print(row['member'], row['facility'], row['cost'])
 
 
-Modifying Data
+データの変更
 --------------
 
-Querying data is all well and good, but at some point you're probably going to
-want to put data into your database! This section deals with inserting,
-updating, and deleting information. Operations that alter your data like this
-are collectively known as Data Manipulation Language, or DML.
+データにクエリーをかけることはできるようになりましたが,次はおそらくデータベースに
+データを書き込みたいと思うようになるはずです! このようにデータを変更する操作は,
+まとめて Data Manipulation Language または DML と呼ばれています.
 
-In previous sections, we returned to you the results of the query you've
-performed. Since modifications like the ones we're making in this section don't
-return any query results, we instead show you the updated content of the table
-you're supposed to be working on.
+これまでの章では,実行したクエリーの結果を返していました.この章で述べるような
+変更処理ではクエリーの結果を返しません.その代わり,意図に基づいて更新されたテーブル
+の内容を表示します.
 
-Insert some data into a table
+データをテーブルに insert する
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The club is adding a new facility - a spa. We need to add it into the
-facilities table. Use the following values: facid: 9, Name: 'Spa',
-membercost: 20, guestcost: 30, initialoutlay: 100000, monthlymaintenance: 800
+このクラブでは新しい施設であるスパを増やそうとしています.私達はこれを facilities
+テーブルに追加する必要があります.以下の値を使うことにします:
+facid: 9, Name: 'Spa', membercost: 20, guestcost: 30, 
+initialoutlay: 100000, monthlymaintenance: 800
 
 .. code-block:: sql
 
@@ -629,11 +619,11 @@ membercost: 20, guestcost: 30, initialoutlay: 100000, monthlymaintenance: 800
            .execute())
 
 
-Insert multiple rows of data into a table
+複数行データをテーブルに insert する
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the previous exercise, you learned how to add a facility. Now you're going
-to add multiple facilities in one command. Use the following values:
+直前の演習では施設の追加方法を学びました.次に複数の施設を1個のコマンドで
+追加してみましょう.以下の値を使います:
 
 facid: 9, Name: 'Spa', membercost: 20, guestcost: 30, initialoutlay: 100000,
 monthlymaintenance: 800.
@@ -643,7 +633,7 @@ initialoutlay: 5000, monthlymaintenance: 80.
 
 .. code-block:: sql
 
-    -- see above --
+    -- 前述 --
 
 .. code-block:: python
 
@@ -655,12 +645,12 @@ initialoutlay: 5000, monthlymaintenance: 80.
     res = Facility.insert_many(data).execute()
 
 
-Insert calculated data into a table
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+データの計算結果をテーブルに insert する
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Let's try adding the spa to the facilities table again. This time, though, we
-want to automatically generate the value for the next facid, rather than
-specifying it as a constant. Use the following values for everything else:
+facilities テーブルに再度 spa を追加してみましょう.ただこの時,次の facid 
+を定数として追加するのではなく,値を自動生成したいと思います.facid 以外は
+以下の値を使います:
 Name: 'Spa', membercost: 20, guestcost: 30, initialoutlay: 100000,
 monthlymaintenance: 800.
 
@@ -677,12 +667,11 @@ monthlymaintenance: 800.
     subq = Select(columns=(maxq, 'Spa', 20, 30, 100000, 800))
     res = Facility.insert_from(subq, Facility._meta.sorted_fields).execute()
 
-Update some existing data
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+既存のいくつかのデータを update する
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We made a mistake when entering the data for the second tennis court. The
-initial outlay was 10000 rather than 8000: you need to alter the data to fix
-the error.
+２つ目のテニスコートのデータを入れる際に間違えてしまいました.初期費用は 8000
+ではなく 10000 でした: あなたはデータを変更してエラーを修正する必要があります.
 
 .. code-block:: sql
 
@@ -701,11 +690,11 @@ the error.
            .where(Facility.name == 'Tennis Court 2')
            .execute())
 
-Update multiple rows and columns at the same time
+複数行と複数カラムを同時に update する
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We want to increase the price of the tennis courts for both members and
-guests. Update the costs to be 6 for members, and 30 for guests.
+私達はメンバーとゲスト双方について,テニスコートの値段を上げたいと思います.
+メンバーの料金は 6,ゲストは 30 になるように更新してください.
 
 .. code-block:: sql
 
@@ -718,12 +707,11 @@ guests. Update the costs to be 6 for members, and 30 for guests.
              .where(Facility.name.startswith('Tennis'))
              .execute())
 
-Update a row based on the contents of another row
+別の行の内容に基づいて行を update する
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We want to alter the price of the second tennis court so that it costs 10%
-more than the first one. Try to do this without using constant values for the
-prices, so that we can reuse the statement if we want to.
+2番目のテニスコートの価格を,1番目の価格の 10% 増しにしたいと思います.必要に
+応じてそのステートメントを再利用できるように,これを定数を使わずにやってみてください.
 
 .. code-block:: sql
 
@@ -732,7 +720,7 @@ prices, so that we can reuse the statement if we want to.
     guestcost = (SELECT guestcost * 1.1 FROM facilities WHERE facid = 0)
     WHERE facid = 1;
 
-    -- OR --
+    -- または --
     WITH new_prices (nmc, ngc) AS (
       SELECT membercost * 1.1, guestcost * 1.1
       FROM facilities WHERE name = 'Tennis Court 1')
@@ -751,7 +739,7 @@ prices, so that we can reuse the statement if we want to.
            .where(Facility.facid == 1)
            .execute())
 
-    # OR:
+    # または:
     cte = (Facility
            .select(Facility.membercost * 1.1, Facility.guestcost * 1.1)
            .where(Facility.name == 'Tennis Court 1')
@@ -763,11 +751,11 @@ prices, so that we can reuse the statement if we want to.
            .where(Facility.name == 'Tennis Court 2')
            .execute())
 
-Delete all bookings
+すべての予約を削除する
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-As part of a clearout of our database, we want to delete all bookings from
-the bookings table.
+データベースの掃除の一環として,bookings テーブルからすべての予約データを
+削除したいと思います.
 
 .. code-block:: sql
 
@@ -778,10 +766,10 @@ the bookings table.
     nrows = Booking.delete().execute()
 
 
-Delete a member from the cd.members table
+cd.members テーブルからメンバーを削除する
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We want to remove member 37, who has never made a booking, from our database.
+データベースから,一切予約をしていない 37 番のメンバーを削除します.
 
 .. code-block:: sql
 
@@ -791,11 +779,10 @@ We want to remove member 37, who has never made a booking, from our database.
 
     nrows = Member.delete().where(Member.memid == 37).execute()
 
-Delete based on a subquery
+サブクエリー基づいて削除する
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-How can we make that more general, to delete all members who have never made
-a booking?
+より汎用的に,一切予約をしていないメンバーをすべて削除するにはどうすればよいでしょうか？
 
 .. code-block:: sql
 
@@ -808,22 +795,21 @@ a booking?
     nrows = Member.delete().where(~fn.EXISTS(subq)).execute()
 
 
-Aggregation
+集約関数
 -----------
 
-Aggregation is one of those capabilities that really make you appreciate the
-power of relational database systems. It allows you to move beyond merely
-persisting your data, into the realm of asking truly interesting questions that
-can be used to inform decision making. This category covers aggregation at
-length, making use of standard grouping as well as more recent window
-functions.
+集約関数は,リレーショナルデータベースシステムのパワーの恩恵を受けられる機能のひとつです.
+これにより,単にデータを保持するだけというレベルから,意思決定にも役立てられるような
+本当に興味のある質問を投げかけることができるようになります.このカテゴリーでは
+集約関数を詳細にカバーします.標準的なグルーピングに加えて,最新のウィンドウ関数に
+ついても言及します.
 
-Count the number of facilities
+
+設備の数をカウントする
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For our first foray into aggregates, we're going to stick to something
-simple. We want to know how many facilities exist - simply produce a total
-count.
+集約関数への最初の入口として,まずは簡単な例からご紹介します.施設がどれだけ存在
+するのかを知るにはどうすればよいでしょうか？ - 単に合計をカウントしてみましょう.
 
 .. code-block:: sql
 
@@ -834,14 +820,13 @@ count.
     query = Facility.select(fn.COUNT(Facility.facid))
     count = query.scalar()
 
-    # OR:
+    # または:
     count = Facility.select().count()
 
-Count the number of expensive facilities
+高価な設備の数をカウントする
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Produce a count of the number of facilities that have a cost to guests of 10
-or more.
+ゲストの料金が 10 以上である施設の数をカウントしてみます.
 
 .. code-block:: sql
 
@@ -852,14 +837,13 @@ or more.
     query = Facility.select(fn.COUNT(Facility.facid)).where(Facility.guestcost >= 10)
     count = query.scalar()
 
-    # OR:
+    # または:
     # count = Facility.select().where(Facility.guestcost >= 10).count()
 
-Count the number of recommendations each member makes.
+それぞれのメンバーが行った被推薦者のカウント
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Produce a count of the number of recommendations each member has made. Order
-by member ID.
+それぞれのメンバーが行った被推薦者をカウントしてみます.結果はメンバー ID でソートします.
 
 .. code-block:: sql
 
@@ -877,12 +861,11 @@ by member ID.
              .order_by(Member.recommendedby))
 
 
-List the total slots booked per facility
+施設ごとの予約時間枠の合計一覧を取得する
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Produce a list of the total number of slots booked per facility. For now,
-just produce an output table consisting of facility id and slots, sorted by
-facility id.
+施設ごとの予約時間枠の合計一覧を求めてみましょう.現時点では単に,施設 ID と
+時間枠で構成されるテーブルを施設 ID でソートしたものを出力してみます.
 
 .. code-block:: sql
 
@@ -896,12 +879,11 @@ facility id.
              .order_by(Booking.facid))
 
 
-List the total slots booked per facility in a given month
+指定月の施設ごとの予約時間枠の合計一覧を取得する
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Produce a list of the total number of slots booked per facility in the month
-of September 2012. Produce an output table consisting of facility id and
-slots, sorted by the number of slots.
+2012年9月の,施設ごとの予約時間枠の合計一覧を求めてみましょう.施設 ID と時間枠
+で構成されるテーブルを,時間枠の数でソートしたものを出力してみます.
 
 .. code-block:: sql
 
@@ -919,12 +901,11 @@ slots, sorted by the number of slots.
              .group_by(Booking.facility)
              .order_by(fn.SUM(Booking.slots)))
 
-List the total slots booked per facility per month
+月ごとの施設ごとの予約時間枠の合計一覧を取得する
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Produce a list of the total number of slots booked per facility per month in
-the year of 2012. Produce an output table consisting of facility id and
-slots, sorted by the id and month.
+2012年の,月ごと施設ごとの予約時間枠の合計一覧を求めてみましょう.施設 ID と時間枠
+で構成されるテーブルを,施設 ID と月でソートしたものを出力してみます.
 
 .. code-block:: sql
 
@@ -944,31 +925,31 @@ slots, sorted by the id and month.
              .order_by(Booking.facility, month))
 
 
-Find the count of members who have made at least one booking
+最低１件の予約を行ったメンバーの数を算出する
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Find the total number of members who have made at least one booking.
+最低１件の予約を行ったメンバー数の合計を算出してみましょう.
 
 .. code-block:: sql
 
     SELECT COUNT(DISTINCT memid) FROM bookings
 
-    -- OR --
+    -- または --
     SELECT COUNT(1) FROM (SELECT DISTINCT memid FROM bookings) AS _
 
 .. code-block:: python
 
     query = Booking.select(fn.COUNT(Booking.member.distinct()))
 
-    # OR:
+    # または:
     query = Booking.select(Booking.member).distinct()
     count = query.count()  # count() wraps in SELECT COUNT(1) FROM (...)
 
-List facilities with more than 1000 slots booked
+予約された時間枠が1000個以上となる施設の一覧
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Produce a list of facilities with more than 1000 slots booked. Produce an
-output table consisting of facility id and hours, sorted by facility id.
+予約された時間枠が1000個以上となるような施設の一覧を求めてみましょう.施設 ID
+と時間により構成されるテーブルを,施設 ID でソートしたものを出力してみます.
 
 .. code-block:: sql
 
@@ -985,12 +966,13 @@ output table consisting of facility id and hours, sorted by facility id.
              .having(fn.SUM(Booking.slots) > 1000)
              .order_by(Booking.facility))
 
-Find the total revenue of each facility
+施設ごとの売上合計を求める
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Produce a list of facilities along with their total revenue. The output table
-should consist of facility name and revenue, sorted by revenue. Remember that
-there's a different cost for guests and members!
+施設の一覧を,それらの売上合計と合わせて求めてみましょう.出力されるテーブルは
+施設名と売上により構成され,売上でソートされています.ゲストとメンバーでは
+利用料が異なることに注意してください。
+
 
 .. code-block:: sql
 
@@ -1014,12 +996,11 @@ there's a different cost for guests and members!
              .order_by(SQL('revenue')))
 
 
-Find facilities with a total revenue less than 1000
+売上合計が1000未満の施設の一覧
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Produce a list of facilities with a total revenue less than 1000. Produce an
-output table consisting of facility name and revenue, sorted by revenue.
-Remember that there's a different cost for guests and members!
+売上合計が1000未満の施設の一覧を求めてみます.出力は施設名と売上により構成され,
+売上によりソートされます.ゲストとメンバーでは利用料が異なることに注意してください。
 
 .. code-block:: sql
 
@@ -1045,10 +1026,10 @@ Remember that there's a different cost for guests and members!
              .having(revenue < 1000)
              .order_by(SQL('revenue')))
 
-Output the facility id that has the highest number of slots booked
+予約された時間枠数が最も多い施設 ID を出力する
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Output the facility id that has the highest number of slots booked.
+予約された時間枠数が最も多い施設 ID を出力します.
 
 .. code-block:: sql
 
@@ -1068,17 +1049,15 @@ Output the facility id that has the highest number of slots booked.
     # Retrieve multiple scalar values by calling scalar() with as_tuple=True.
     facid, nslots = query.scalar(as_tuple=True)
 
-List the total slots booked per facility per month, part 2
+月ごと施設ごとの予約時間枠の合計一覧を取得する - part 2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Produce a list of the total number of slots booked per facility per month in
-the year of 2012. In this version, include output rows containing totals for
-all months per facility, and a total for all months for all facilities. The
-output table should consist of facility id, month and slots, sorted by the id
-and month. When calculating the aggregated values for all months and all
-facids, return null values in the month and facid columns.
+2012年の月ごと施設ごとの予約時間枠の合計の一覧を取得します.このバージョンでは,
+出力行に施設ごとのすべての月の合計と,施設全体のすべての月の合計が現れます.
+出力テーブルは施設 ID, 月, 時間枠により構成され,施設 ID と月でソートされます.
+すべての月とすべての施設の集約値を計算する際は,月と施設 ID は null 値を返します.
 
-Postgres ONLY.
+※ Postgres のみ.
 
 .. code-block:: sql
 
@@ -1100,12 +1079,11 @@ Postgres ONLY.
              .order_by(Booking.facility, month))
 
 
-List the total hours booked per named facility
+施設ごとの予約合計時間のリスト
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Produce a list of the total number of hours booked per facility, remembering
-that a slot lasts half an hour. The output table should consist of the
-facility id, name, and hours booked, sorted by facility id.
+時間枠は 30 分単位であることを考慮しつつ,施設ごとの予約時間の合計の一覧を求めます.
+出力テーブルは施設 ID, 施設名, 予約時間からなり,施設 ID でソートされます.
 
 .. code-block:: sql
 
@@ -1124,11 +1102,11 @@ facility id, name, and hours booked, sorted by facility id.
              .order_by(Facility.facid))
 
 
-List each member's first booking after September 1st 2012
+2012/09/01 以降に最初に予約したメンバーのリスト
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Produce a list of each member name, id, and their first booking after
-September 1st 2012. Order by member ID.
+2012/09/01 以降最初に予約したメンバーについて,メンバー名,メンバー ID
+および予約開始時間のリストを求めます.ソート順はメンバー ID です.
 
 .. code-block:: sql
 
@@ -1149,13 +1127,12 @@ September 1st 2012. Order by member ID.
              .group_by(Member.surname, Member.firstname, Member.memid)
              .order_by(Member.memid))
 
-Produce a list of member names, with each row containing the total member count
+各行にメンバー数の合計を記載したメンバー名の一覧
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Produce a list of member names, with each row containing the total member
-count. Order by join date.
+各行にメンバー数の合計を含むメンバー名の一覧です.ソートキーは加入日です.
 
-Postgres ONLY (as written).
+Postgres のみ (文字通り).
 
 .. code-block:: sql
 
@@ -1169,14 +1146,13 @@ Postgres ONLY (as written).
                      Member.surname)
              .order_by(Member.joindate))
 
-Produce a numbered list of members
+メンバーのリストに番号を振ったもの
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Produce a monotonically increasing numbered list of members, ordered by their
-date of joining. Remember that member IDs are not guaranteed to be
-sequential.
+メンバー一覧に対して単純に昇順の番号を振り,加入日でソートしたものを求めます.
+メンバー ID は昇順になっているとは限らないことに注意してください.
 
-Postgres ONLY (as written).
+Postgres のみ (文字通り).
 
 .. code-block:: sql
 
@@ -1190,13 +1166,13 @@ Postgres ONLY (as written).
                      Member.firstname, Member.surname)
              .order_by(Member.joindate))
 
-Output the facility id that has the highest number of slots booked, again
+再度,予約時間枠数が最大の施設 ID を出力
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Output the facility id that has the highest number of slots booked. Ensure
-that in the event of a tie, all tieing results get output.
+予約時間枠数が最大である施設の ID を求めます.複数あった場合はそれらが
+すべて出力されます.
 
-Postgres ONLY (as written).
+Postgres のみ (文字通り).
 
 .. code-block:: sql
 
@@ -1222,19 +1198,18 @@ Postgres ONLY (as written).
              .where(subq.c.rank == 1)
              .bind(db))  # We must bind() it to the database.
 
-    # To iterate over the query results:
+    # クエリー結果をイテレートする場合:
     for facid, total in query.tuples():
         print(facid, total)
 
-Rank members by (rounded) hours used
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+利用時間(概数)によるメンバーのランキング
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Produce a list of members, along with the number of hours they've booked in
-facilities, rounded to the nearest ten hours. Rank them by this rounded
-figure, producing output of first name, surname, rounded hours, rank. Sort by
-rank, surname, and first name.
+施設を予約した時間を10時間単位で四捨五入した数とともに,メンバー一覧を出力します.
+この概算値を使って順位付けを行い,名,姓,概算時間数,順位を出力します.ソート順は
+順位,姓,名です.
 
-Postgres ONLY (as written).
+Postgres のみ (文字通り).
 
 .. code-block:: sql
 
@@ -1257,13 +1232,13 @@ Postgres ONLY (as written).
              .order_by(SQL('rank'), Member.surname, Member.firstname))
 
 
-Find the top three revenue generating facilities
+収入合計がトップ３の施設
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Produce a list of the top three revenue generating facilities (including
-ties). Output facility name and rank, sorted by rank and facility name.
+トップ３の売上を計上した施設の一覧を求めます(同順位も考慮).出力は施設名と
+順位により構成され,順位と施設名でソートされます.
 
-Postgres ONLY (as written).
+Postgres のみ (文字通り).
 
 .. code-block:: sql
 
@@ -1295,13 +1270,14 @@ Postgres ONLY (as written).
             .order_by(subq.c.rank)
             .bind(db))  # Here again we used plain Select, and call bind().
 
-Classify facilities by value
+値により施設を分類する
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Classify facilities into equally sized groups of high, average, and low based
-on their revenue. Order by classification and facility name.
+施設をそれらの売上額の高い(high),平均(average),低い(low)という３グループに分類します.
+ソート順は分類と施設名です.
 
-Postgres ONLY (as written).
+
+Postgres のみ (文字通り).
 
 .. code-block:: sql
 
@@ -1333,22 +1309,24 @@ Postgres ONLY (as written).
              .order_by(subq.c.klass, subq.c.name)
              .bind(db))
 
-Recursion
+再帰
 ---------
 
-Common Table Expressions allow us to, effectively, create our own temporary
-tables for the duration of a query - they're largely a convenience to help us
-make more readable SQL. Using the WITH RECURSIVE modifier, however, it's
-possible for us to create recursive queries. This is enormously advantageous
-for working with tree and graph-structured data - imagine retrieving all of the
-relations of a graph node to a given depth, for example.
+クエリーの実行中に,一般的なテーブル表現を使って効率的に中間的なテーブルを生成
+することができます - それらは SQL をより読みやすくしてくれるので、非常に便利な
+ものです.しかしながら, WITH RECURSIVE 修飾子を使うと,再帰クエリーを生成する
+ことができます.これはツリー構造やグラフ構造のデータを処理する際,とても都合の
+よいものです - たとえば,指定された深度でグラフノードのリレーション全体を探索
+することを考えてみてください.
 
-Find the upward recommendation chain for member ID 27
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Find the upward recommendation chain for member ID 27: that is, the member
-who recommended them, and the member who recommended that member, and so on.
-Return member ID, first name, and surname. Order by descending member id.
+メンバー ID 27 についての推薦チェーンで上昇中のものを見つける
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+メンバー ID 27 について,推薦チェーンの中から上昇中のものを見つけることを考えます:
+すなわち,他の誰かを推薦したメンバーと,そのメンバーを推薦したメンバーを見つける
+といったことです.このクエリーではメンバー ID,名,姓を返します.ソート順はメンバー
+ID の降順です.
 
 .. code-block:: sql
 
@@ -1366,22 +1344,23 @@ Return member ID, first name, and surname. Order by descending member id.
 
 .. code-block:: python
 
-    # Base-case of recursive CTE. Get member recommender where memid=27.
+    # 再帰 CTE の基本ケース.memid=27 の推薦者を見つける.
     base = (Member
             .select(Member.recommendedby)
             .where(Member.memid == 27)
             .cte('recommenders', recursive=True, columns=('recommender',)))
 
-    # Recursive term of CTE. Get recommender of previous recommender.
+    # CTE の再帰部分.直近の推薦者の推薦者を見つける.
     MA = Member.alias()
     recursive = (MA
                  .select(MA.recommendedby)
                  .join(base, on=(MA.memid == base.c.recommender)))
 
     # Combine the base-case with the recursive term.
+    # 基本ケースと再帰部分を結合
     cte = base.union_all(recursive)
 
-    # Select from the recursive CTE, joining on member to get name info.
+    # 再帰 CTE から select し,member と結合して名前の情報を取得
     query = (cte
              .select_from(cte.c.recommender, Member.firstname, Member.surname)
              .join(Member, on=(cte.c.recommender == Member.memid))

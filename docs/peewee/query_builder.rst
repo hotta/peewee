@@ -1,7 +1,7 @@
 .. _query-builder:
 
-Query Builder
-=============
+クエリービルダー
+===================
 
 Peewee's high-level :py:class:`Model` and :py:class:`Field` APIs are built upon
 lower-level :py:class:`Table` and :py:class:`Column` counterparts. While these
@@ -31,8 +31,8 @@ We'll use the following schema:
         "alarm" DATETIME NOT NULL,
         FOREIGN KEY ("note_id") REFERENCES "note" ("id"));
 
-Declaring tables
-----------------
+テーブルを定義する
+---------------------
 
 There are two ways we can declare :py:class:`Table` objects for working with
 these tables:
@@ -58,8 +58,8 @@ query on the table:
     Note = Note.bind(db)
     Reminder = Reminder.bind(db)
 
-Select queries
---------------
+Select クエリー
+------------------
 
 To select the first three notes and print their content, we can write:
 
@@ -172,8 +172,8 @@ associated note content:
     The ".c" attribute will not work on tables that explicitly define their
     columns, to prevent confusion.
 
-Insert queries
---------------
+Insert クエリー
+-------------------
 
 Inserting data is straightforward. We can specify data to
 :py:meth:`~Table.insert` in two different ways (in both cases, the ID of the
@@ -215,8 +215,8 @@ Examples:
         ('Nuggie', 'Bar')]
     Person.insert(people, columns=[Person.first, Person.last]).execute()
 
-Update queries
---------------
+Update クエリー
+-----------------------
 
 :py:meth:`~Table.update` queries accept either keyword arguments or a
 dictionary mapping column to value, just like :py:meth:`~Table.insert`.
@@ -251,8 +251,8 @@ count for some URL:
      .where(PageView.url == some_url)
      .execute())
 
-Delete queries
---------------
+Delete クエリー
+---------------------
 
 :py:meth:`~Table.delete` queries are simplest of all, as they do not accept any
 arguments:
@@ -274,8 +274,8 @@ would delete all notes by anyone whose last name is "Foo":
     # Delete all notes by any person whose ID is in the previous query.
     Note.delete().where(Note.person_id.in_(foo_people)).execute()
 
-Query Objects
--------------
+クエリーオプション
+---------------------
 
 One of the fundamental limitations of the abstractions provided by Peewee 2.x
 was the absence of a class that represented a structured query with no relation
@@ -380,8 +380,8 @@ calculate the first 10 fibonacci numbers:
      {'fib_n': 21, 'n': 9},
      {'fib_n': 34, 'n': 10}]
 
-More
-----
+さらに
+-------------
 
 For a description of the various classes used to describe a SQL AST, see the
 :ref:`query builder API documentation <query-builder-api>`.

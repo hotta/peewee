@@ -1,11 +1,11 @@
 .. _relationships:
 
-Relationships and Joins
+リレーションと JOIN
 =======================
 
 In this document we'll cover how Peewee handles relationships between models.
 
-Model definitions
+モデル定義
 -----------------
 
 We'll use the following model definitions for our examples:
@@ -40,8 +40,8 @@ between models. Every foreign-key field has an implied back-reference, which is
 exposed as a pre-filtered :py:class:`Select` query using the provided
 ``backref`` attribute.
 
-Creating test data
-^^^^^^^^^^^^^^^^^^
+テストデータの作成
+^^^^^^^^^^^^^^^^^^^^^^
 
 To follow along with the examples, let's populate this database with some test
 data:
@@ -110,7 +110,7 @@ mickey    whine      huey
         # Ensure foreign-key constraints are enforced.
         db = SqliteDatabase('my_app.db', pragmas={'foreign_keys': 1})
 
-Performing simple joins
+単純な JOIN の実行
 -----------------------
 
 As an exercise in learning how to perform joins with Peewee, let's write a
@@ -167,8 +167,8 @@ pre-filtered ``SELECT`` query:
     ('SELECT "t1"."id", "t1"."content", "t1"."timestamp", "t1"."user_id"
       FROM "tweet" AS "t1" WHERE ("t1"."user_id" = ?)', [1])
 
-Joining multiple tables
------------------------
+複数のテーブルを JOIN する
+----------------------------
 
 Let's take another look at joins by querying the list of users and getting the
 count of how many tweet's they've authored that were favorited. This will
@@ -281,7 +281,7 @@ and the favorite count:
 
 .. _multiple-sources:
 
-Selecting from multiple sources
+複数のソースから select する
 -------------------------------
 
 If we wished to list all the tweets in the database, along with the username of
@@ -374,7 +374,7 @@ the end of our query (similar to how we called ``dicts()``):
     huey -> meow
     (etc)
 
-More complex example
+より複雑な例
 ^^^^^^^^^^^^^^^^^^^^
 
 As a more complex example, in this query, we will write a single query that
@@ -423,8 +423,8 @@ selected and reconstructed the model graph:
 
 .. _join-subquery:
 
-Subqueries
-----------
+サブクエリー
+------------------
 
 Peewee allows you to join on any table-like object, including subqueries or
 common table expressions (CTEs). To demonstrate joining on a subquery, let's
@@ -492,7 +492,7 @@ create the query in this section:
   ``Tweet`` and ``User`` models. This is shorthand for selecting all fields on
   the given model.
 
-Common-table Expressions
+一般的なテーブル表現
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 In the previous section we joined on a subquery, but we could just as easily
@@ -555,7 +555,7 @@ each user:
     For more information about using CTEs, including information on writing
     recursive CTEs, see the :ref:`cte` section of the "Querying" document.
 
-Multiple foreign-keys to the same Model
+同じモデルに対する複数の外部キー
 ---------------------------------------
 
 When there are multiple foreign keys to the same model, it is good practice to
@@ -600,8 +600,8 @@ would instead join on the *from_user* column and filter on the relationship's
      .join(Relationship, on=Relationship.from_user)
      .where(Relationship.to_user == charlie))
 
-Joining on arbitrary fields
----------------------------
+任意のフィールドに対する JOIN
+-------------------------------
 
 If a foreign key does not exist between two tables you can still perform a
 join, but you must manually specify the join predicate.
@@ -647,12 +647,12 @@ In the following example, there is no explicit foreign-key between *User* and
         for user in user_log:
             print(user.username, user.log.description)
 
-Self-joins
+自己 JOIN
 ----------
 
 Peewee supports constructing queries containing a self-join.
 
-Using model aliases
+モデルの別名を使う
 ^^^^^^^^^^^^^^^^^^^
 
 To join on the same model (table) twice, it is necessary to create a model
@@ -680,8 +680,8 @@ When performing a join that uses a :py:class:`ModelAlias`, it is necessary to
 specify the join condition using the ``on`` keyword argument. In this case we
 are joining the category with its parent category.
 
-Using subqueries
-^^^^^^^^^^^^^^^^
+サブクエリーを使う
+^^^^^^^^^^^^^^^^^^^^^^
 
 Another less common approach involves the use of subqueries. Here is another
 way we might construct a query to get all the categories whose parent category
@@ -720,7 +720,7 @@ which will generate the appropriate SQL expression:
 
 .. _manytomany:
 
-Implementing Many to Many
+Many to Many を実装する
 -------------------------
 
 Peewee provides a field for representing many-to-many relationships, much like
@@ -885,7 +885,7 @@ For more examples, see:
 
 .. _nplusone:
 
-Avoiding the N+1 problem
+N+1 問題の回避
 ------------------------
 
 The *N+1 problem* refers to a situation where an application performs a query,
@@ -910,7 +910,7 @@ them.
     results. As always when making optimizations, profile before and after to
     ensure the changes do what you expect them to.
 
-List recent tweets
+最新のツイート一覧
 ^^^^^^^^^^^^^^^^^^
 
 The twitter timeline displays a list of tweets from multiple users. In addition
@@ -942,8 +942,8 @@ resolve the foreign-key for us.
 .. note::
     This technique is discussed in more detail in :ref:`multiple-sources`.
 
-List users and all their tweets
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ユーザとそれらのツイートのリスト
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Let's say you want to build a page that shows several users and all of their
 tweets. The N+1 scenario would be:
@@ -964,8 +964,8 @@ for each table being selected.
 
 .. _prefetch:
 
-Using prefetch
-^^^^^^^^^^^^^^
+プリフェッチを使う
+^^^^^^^^^^^^^^^^^^^^^
 
 peewee supports pre-fetching related data using sub-queries. This method
 requires the use of a special API, :py:func:`prefetch`. Prefetch, as its name

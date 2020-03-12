@@ -1,18 +1,18 @@
 .. _models:
 
-モデルとフィールド
-==================
+モデルとフィールド（まだ途中）
+================================
 
 データベースのコンセプトにマップされる,すべての :py:class:`Model` クラス,
 :py:class:`Field` インスタンスおよび model インスタンス:
 
-=================   =================================
-対象                対応するもの...
-=================   =================================
-Model クラス        データベーステーブル
-Field インスタンス  テーブルのカラム
-Model インスタンス   データベーステーブルの行
-=================   =================================
+=====================   =================================
+対象                    対応するもの...
+=====================   =================================
+Model クラス            データベーステーブル
+Field インスタンス       テーブルのカラム
+Model インスタンス       データベーステーブルの行
+=====================   =================================
 
 データベースの接続とモデルを定義するための典型的なやり方は以下の通りです.
 
@@ -48,7 +48,7 @@ Model インスタンス   データベーステーブルの行
     この例では :py:class:`SqliteDatabase` を使っていますが,
     :ref:`database engines <database>` にある他のものを使っても構いません.
 
-2. Create a base model class which specifies our database.
+2. 私達のデータベースを指定したベースモデルクラスを作成する.
 
     .. code-block:: python
 
@@ -56,17 +56,15 @@ Model インスタンス   データベーステーブルの行
             class Meta:
                 database = db
 
-    It is good practice to define a base model class which establishes the
-    database connection. This makes your code DRY as you will not have to
-    specify the database for subsequent models.
+    データベース接続を確立するためのベースモデルを定義するのはすぐれた方法です.
+    これによりコードが DRY になり,後続のモデルについてはデータベースを指定する必要がなくなります.
 
-    Model configuration is kept namespaced in a special class called ``Meta``.
-    This convention is borrowed from Django. :ref:`Meta <model-options>`
-    configuration is passed on to subclasses, so our project's models will all
-    subclass *BaseModel*. There are :ref:`many different attributes
-    <model-options>` you can configure using *Model.Meta*.
+    モデルの構成は ``Meta`` と呼ばれる特別なクラス中の名前空間に属するようにします.
+    この慣習は Django から拝借したものです. :ref:`Meta <model-options>` 構成はサブクラスに渡され,
+    私達のプロジェクトのモデルはすべて *BaseModel* のサブクラスとなります. 
+    *Model.Meta* を使って :ref:`多くの異なった属性 <model-options>` を構成できます.
 
-3. Define a model class.
+3. モデルクラスを定義する
 
     .. code-block:: python
 

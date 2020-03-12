@@ -1,40 +1,37 @@
 .. _querying:
 
-Querying
-========
+クエリーの発行
+=================
 
-This section will cover the basic CRUD operations commonly performed on a
-relational database:
+この章では, リレーショナルデータベースに対して広く実行される, 基本的な CRUD 操作について述べます:
 
-* :py:meth:`Model.create`, for executing *INSERT* queries.
-* :py:meth:`Model.save` and :py:meth:`Model.update`, for executing *UPDATE*
-  queries.
-* :py:meth:`Model.delete_instance` and :py:meth:`Model.delete`, for executing
-  *DELETE* queries.
-* :py:meth:`Model.select`, for executing *SELECT* queries.
+* :py:meth:`Model.create`, *INSERT* クエリーの発行.
+* :py:meth:`Model.save` と :py:meth:`Model.update`,  *UPDATE* クエリーの発行.
+* :py:meth:`Model.delete_instance` と :py:meth:`Model.delete`, *DELETE* クエリーの発行.
+* :py:meth:`Model.select`, *SELECT* クエリーの発行.
 
 .. note::
-    There is also a large collection of example queries taken from the
-    `Postgresql Exercises <https://pgexercises.com/>`_ website. Examples are
-    listed on the :ref:`query examples <query_examples>` document.
+    この文書では, `Postgresql Exercises <https://pgexercises.com/>`_ Web
+    サイトにある大量のクエリー例を取り入れています.クエリー例の一覧は
+    :ref:`query examples <query_examples>` ドキュメントにあります.
 
-Creating a new record
----------------------
+新しいレコードを作成する
+-------------------------
 
-You can use :py:meth:`Model.create` to create a new model instance. This method
-accepts keyword arguments, where the keys correspond to the names of the
-model's fields. A new instance is returned and a row is added to the table.
+:py:meth:`Model.create` を使って新しいモデルのインスタンスを作成できます.
+このメソッドはキーワード引数を受け取りますが, キーはモデルのフィールド名に対応しています.
+新しいインスタンスが返され, テーブルに行が追加されます.
 
 .. code-block:: pycon
 
     >>> User.create(username='Charlie')
     <__main__.User object at 0x2529350>
 
-This will *INSERT* a new row into the database. The primary key will
-automatically be retrieved and stored on the model instance.
+これはデータベースに新しい行を *INSERT* します.
+プライマリキーが自動的に取り出され, モデルのインスタンスに格納されます.
 
-Alternatively, you can build up a model instance programmatically and then call
-:py:meth:`~Model.save`:
+別案として, プログラム的にモデルインスタンスを組み立てて,
+:py:meth:`~Model.save` を呼ぶこともできます:
 
 .. code-block:: pycon
 
@@ -50,40 +47,41 @@ Alternatively, you can build up a model instance programmatically and then call
     >>> huey.id
     2
 
-When a model has a foreign key, you can directly assign a model instance to the
-foreign key field when creating a new record.
+モデルが外部キーを保つ場合は, 新しいレコードを作成する際に,
+モデルインスタンスを外部キーフィールドに直接代入できます.
 
 .. code-block:: pycon
 
     >>> tweet = Tweet.create(user=huey, message='Hello!')
 
-You can also use the value of the related object's primary key:
+関連するオブジェクトのプライマリキーの値を使うこともできます:
 
 .. code-block:: pycon
 
     >>> tweet = Tweet.create(user=2, message='Hello again!')
 
-If you simply wish to insert data and do not need to create a model instance,
-you can use :py:meth:`Model.insert`:
+もし単にデータを insert したいだけで, モデルインスタンスを作る必要がない場合,
+ :py:meth:`Model.insert` が使えます:
 
 .. code-block:: pycon
 
     >>> User.insert(username='Mickey').execute()
     3
 
-After executing the insert query, the primary key of the new row is returned.
+insert クエリーを実行した後, 新しい行のプライマリキーが返されます.
 
 .. note::
-    There are several ways you can speed up bulk insert operations. Check out
-    the :ref:`bulk_inserts` recipe section for more information.
+    一括 insert の際の速度を上げるための方法がいくつかあります.
+    詳細は :ref:`bulk_inserts` の方法の章を確認してみてください.
 
 .. _bulk_inserts:
 
-Bulk inserts
+一括 insert
 ------------
 
-There are a couple of ways you can load lots of data quickly. The naive
-approach is to simply call :py:meth:`Model.create` in a loop:
+たくさんのデータを素早くロードするための方法をいくつかご紹介します.
+バカ正直なアプローチとしては, 単にループの中で :py:meth:`Model.create` を呼ぶことです:
+
 
 .. code-block:: python
 
@@ -96,31 +94,30 @@ approach is to simply call :py:meth:`Model.create` in a loop:
     for data_dict in data_source:
         MyModel.create(**data_dict)
 
-The above approach is slow for a couple of reasons:
+上記のアプローチは, いくつかの理由により遅くなります:
 
-1. If you are not wrapping the loop in a transaction then each call to
-   :py:meth:`~Model.create` happens in its own transaction. That is going to be
-   really slow!
-2. There is a decent amount of Python logic getting in your way, and each
-   :py:class:`InsertQuery` must be generated and parsed into SQL.
-3. That's a lot of data (in terms of raw bytes of SQL) you are sending to your
-   database to parse.
-4. We are retrieving the *last insert id*, which causes an additional query to
-   be executed in some cases.
+1.  ループをトランザクションで囲んでいない場合, :py:meth:`~Model.create`
+    への呼び出しのたびにトランザクションが生成されます. これだと極端に遅くなります!
+2.  この方法だと, これに 適合する Python のロジックがたくさんあるのですが, それぞれに対して
+    :py:class:`InsertQuery` を生成し, それらが SQL にパースされる必要があります.
+3.  このため, データベースに対して(SQL の生のバイトストリームという意味で)
+    パース対象となる大量のデータを送りつけることになります.
+4.  私達は *last insert id* を取り出しますが, 
+    このために追加のクエリーを発行しなければならないケースがあります.
 
-You can get a significant speedup by simply wrapping this in a transaction with
-:py:meth:`~Database.atomic`.
+これを :py:meth:`~Database.atomic` を使ってトランザクションで囲むだけで, 劇的に速くなります.
+
 
 .. code-block:: python
 
-    # This is much faster.
+    # この方が速くなる.
     with db.atomic():
         for data_dict in data_source:
             MyModel.create(**data_dict)
 
-The above code still suffers from points 2, 3 and 4. We can get another big
-boost by using :py:meth:`~Model.insert_many`. This method accepts a list of
-tuples or dictionaries, and inserts multiple rows in a single query:
+上記のコードでは, まだ 2,3,4 の弱点があります. :py:meth:`~Model.insert_many` 
+を使うと, さらに爆速になります. このメソッドはリストまたは辞書を受け取り,
+1回の単独クエリーで複数の行を insert します.
 
 .. code-block:: python
 
@@ -130,134 +127,135 @@ tuples or dictionaries, and inserts multiple rows in a single query:
         # ...
     ]
 
-    # Fastest way to INSERT multiple rows.
+    # 複数行を INSERT するための, より速いやり方
     MyModel.insert_many(data_source).execute()
 
-The :py:meth:`~Model.insert_many` method also accepts a list of row-tuples,
-provided you also specify the corresponding fields:
+:py:meth:`~Model.insert_many` メソッドは行タプルのリストも受け取れるので,
+対応するフィールドを指定することもできます:
 
 .. code-block:: python
 
-    # We can INSERT tuples as well...
+    # タプルの INSERT はできるが...
     data = [('val1-1', 'val1-2'),
             ('val2-1', 'val2-2'),
             ('val3-1', 'val3-2')]
 
-    # But we need to indicate which fields the values correspond to.
+    # 値がどのフィールドに対応するのかを指定する必要がある.
     MyModel.insert_many(data, fields=[MyModel.field1, MyModel.field2]).execute()
 
-It is also a good practice to wrap the bulk insert in a transaction:
+一括 insert をトランザクションで囲むのも好ましいやり方です:
 
 .. code-block:: python
 
-    # You can, of course, wrap this in a transaction as well:
+    # もちろんこれをトランザクションで囲むこともできる:
     with db.atomic():
         MyModel.insert_many(data, fields=fields).execute()
 
 .. note::
-    SQLite users should be aware of some caveats when using bulk inserts.
-    Specifically, your SQLite3 version must be 3.7.11.0 or newer to take
-    advantage of the bulk insert API. Additionally, by default SQLite limits
-    the number of bound variables in a SQL query to ``999``.
+    SQLite ユーザは一括 insert に際して注意すべき事項があります. 特に SQLite3 のバージョンが
+    3.7.11.0 もしくはそれ以降の場合, 一括 insert API が使えるという利点があります. さらに,
+    SQLite では SQL クエリー中のバインド変数の数がデフォルトで ``999`` に制限されています.
 
-Inserting rows in batches
+一括で行を insert する
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Depending on the number of rows in your data source, you may need to break it
-up into chunks. SQLite in particular typically has a `limit of 999 <https://www.sqlite.org/limits.html#max_variable_number>`_
-variables-per-query (batch size would then be roughly 1000 / row length).
+データソース中の行数次第では, それらを複数に分割する必要があるケースがあります.
+特に SQLite はクエリーごとの変数が
+`999 に制限 <https://www.sqlite.org/limits.html#max_variable_number>`_
+されています(バッチのサイズは概ね 1000 / 行の長さ).
 
-You can write a loop to batch your data into chunks (in which case it is
-**strongly recommended** you use a transaction):
+1回分のデータを複数のブロックに分割するためのループを書くことができます
+(このケースでは, トランザクションを使うことが **強く推奨されます** .
 
 .. code-block:: python
 
-    # Insert rows 100 at a time.
+    # 一度に 100 行ずつ insert する
     with db.atomic():
         for idx in range(0, len(data_source), 100):
             MyModel.insert_many(data_source[idx:idx+100]).execute()
 
-Peewee comes with a :py:func:`chunked` helper function which you can use for
-*efficiently* chunking a generic iterable into a series of *batch*-sized
-iterables:
+Peewee には :py:func:`chunked` ヘルパー関数が用意されており, これを使うと一般的な
+iterable(繰り返しループ)を *効率的に* *batch*-size の大きさの iterable に変換できます:
+
 
 .. code-block:: python
 
     from peewee import chunked
 
-    # Insert rows 100 at a time.
+    # 一度に 100 行ずつ insert する
     with db.atomic():
         for batch in chunked(data_source, 100):
             MyModel.insert_many(batch).execute()
 
-Alternatives
+別の方法
 ^^^^^^^^^^^^
 
-The :py:meth:`Model.bulk_create` method behaves much like
-:py:meth:`Model.insert_many`, but instead it accepts a list of unsaved model
-instances to insert, and it optionally accepts a batch-size parameter. To use
-the :py:meth:`~Model.bulk_create` API:
+:py:meth:`Model.bulk_create` メソッドは :py:meth:`Model.insert_many` 
+とよく似た動作をするのですが, これと違うところは,
+未保存の(unsaved)モデルインスタンスのリストを受け取って insert を行い,
+またオプションで batch-size パラメータを受け付けるところです.
+:py:meth:`~Model.bulk_create` API の使い方は以下のとおりです:
 
 .. code-block:: python
 
-    # Read list of usernames from a file, for example.
+    # 一例として, ファイルからユーザ名のリストを読み込む
     with open('user_list.txt') as fh:
-        # Create a list of unsaved User instances.
+        # 未保存の User インスタンスのリストを作成する
         users = [User(username=line.strip()) for line in fh.readlines()]
 
-    # Wrap the operation in a transaction and batch INSERT the users
-    # 100 at a time.
+    # 操作をトランザクションで囲み, 一度に 100 個ずつ users に insert する
     with db.atomic():
         User.bulk_create(users, batch_size=100)
 
 .. note::
-    If you are using Postgresql (which supports the ``RETURNING`` clause), then
-    the previously-unsaved model instances will have their new primary key
-    values automatically populated.
+    ( ``RETURNING`` 句をサポートしている) Postgresql をお使いの場合,
+    前述の未保存のモデルインスタンスでは, 
+    それらの新しいプライマリキーの値が自動的に付与されます.
 
-In addition, Peewee also offers :py:meth:`Model.bulk_update`, which can
-efficiently update one or more columns on a list of models. For example:
+さらに, Peewee では :py:meth:`Model.bulk_update` を提供しています.
+これはモデルのリストにおける１つ以上のカラムを効率的に update します.
+以下に例を示します:
 
 .. code-block:: python
 
-    # First, create 3 users with usernames u1, u2, u3.
+    # まず u1, u2, u3 の３つのユーザを作成する
     u1, u2, u3 = [User.create(username='u%s' % i) for i in (1, 2, 3)]
 
-    # Now we'll modify the user instances.
+    # 次に user のインスタンスを変更します.
     u1.username = 'u1-x'
     u2.username = 'u2-y'
     u3.username = 'u3-z'
 
-    # Update all three users with a single UPDATE query.
+    # ３つのすべての user を一つの update クエリーで update します.
     User.bulk_update([u1, u2, u3], fields=[User.username])
 
 .. note::
-    For large lists of objects, you should specify a reasonable batch_size and
-    wrap the call to :py:meth:`~Model.bulk_update` with
-    :py:meth:`Database.atomic`:
+    巨大なオブジェクトのリストを扱う場合, 適切な batch_size を指定し, 
+    かつ :py:meth:`~Model.bulk_update` の呼び出しを :py:meth:`Database.atomic`
+    で囲むようにしてください:
 
     .. code-block:: python
 
         with database.atomic():
             User.bulk_update(list_of_users, fields=['username'], batch_size=50)
 
-Alternatively, you can use the :py:meth:`Database.batch_commit` helper to
-process chunks of rows inside *batch*-sized transactions. This method also
-provides a workaround for databases besides Postgresql, when the primary-key of
-the newly-created rows must be obtained.
+別の方法として :py:meth:`Database.batch_commit` ヘルパーを使い, *batch*-size
+になったトランザクションの中で行ブロック(chunks of rows)を処理することもできます.
+このメソッドは, Postgresql 以外のデータベースを使っている場合に,
+新しく作られた行のプライマリキーを取得しなければならないケースにおける回避策を提供します.
 
 .. code-block:: python
 
-    # List of row data to insert.
+    # insert する行データのリスト
     row_data = [{'username': 'u1'}, {'username': 'u2'}, ...]
 
-    # Assume there are 789 items in row_data. The following code will result in
-    # 8 total transactions (7x100 rows + 1x89 rows).
+    # row_data には 789 個のデータが入っているとする. 以下のコードでは,
+    # 合計８個のトランザクションが発生する(7x100 行 + 1x89 行)
     for row in db.batch_commit(row_data, 100):
         User.create(**row)
 
-Bulk-loading from another table
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+他のテーブルからの一括ローディング
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the data you would like to bulk load is stored in another table, you can
 also create *INSERT* queries whose source is a *SELECT* query. Use the
@@ -279,8 +277,8 @@ The above query is equivalent to the following SQL:
     SELECT "user_id", "message" FROM "tweet";
 
 
-Updating existing records
--------------------------
+既存のレコードを update する
+-------------------------------
 
 Once a model instance has a primary key, any subsequent call to
 :py:meth:`~Model.save` will result in an *UPDATE* rather than another *INSERT*.
@@ -322,8 +320,8 @@ For more information, see the documentation on :py:meth:`Model.update`,
 
 .. _atomic_updates:
 
-Atomic updates
---------------
+アトミックな update
+----------------------
 
 Peewee allows you to perform atomic updates. Let's suppose we need to update
 some counters. The naive approach would be to write something like this:
@@ -495,7 +493,7 @@ key (string) to a value (integer):
 For more information, see :py:meth:`Insert.on_conflict` and
 :py:class:`OnConflict`.
 
-Deleting records
+レコードの削除
 ----------------
 
 To delete a single model instance, you can use the
@@ -529,8 +527,8 @@ For more information, see the documentation on:
 * :py:meth:`Model.delete`
 * :py:class:`DeleteQuery`
 
-Selecting a single record
--------------------------
+単一のレコードを select する
+---------------------------------
 
 You can use the :py:meth:`Model.get` method to retrieve a single instance
 matching the given query. For primary-key lookups, you can also use the
@@ -584,8 +582,8 @@ For more information, see the documentation on:
 * :py:meth:`Model.select`
 * :py:meth:`SelectBase.get`
 
-Create or get
--------------
+あれば get なければ create
+-------------------------------
 
 Peewee has one helper method for performing "get/create" type operations:
 :py:meth:`Model.get_or_create`, which first attempts to retrieve the matching
@@ -645,7 +643,7 @@ which will be used to populate values on newly-created instances.
 
 For more details read the documentation for :py:meth:`Model.get_or_create`.
 
-Selecting multiple records
+複数レコードの select
 --------------------------
 
 We can use :py:meth:`Model.select` to retrieve rows from the table. When you
@@ -736,8 +734,8 @@ it easier to work with rows as dictionaries, for example:
 See :py:meth:`~BaseQuery.namedtuples`, :py:meth:`~BaseQuery.tuples`,
 :py:meth:`~BaseQuery.dicts` for more information.
 
-Iterating over large result-sets
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+巨大な結果セットをイテレートする
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 By default peewee will cache the rows returned when iterating over a
 :py:class:`Select` query. This is an optimization to allow multiple iterations
@@ -824,8 +822,8 @@ object. The cursor will return the raw row-tuples:
     for (content, username) in cursor:
         print(username, '->', content)
 
-Filtering records
------------------
+レコードのフィルタリング
+--------------------------
 
 You can filter for particular records using normal python operators. Peewee
 supports a wide variety of :ref:`query operators <query-operators>`.
@@ -892,8 +890,8 @@ types of queries are possible.
         # the ".in_()" method signifies an "IN" query
         a_user_tweets = Tweet.select().where(Tweet.user.in_(a_users))
 
-More query examples
-^^^^^^^^^^^^^^^^^^^
+さらなるクエリーの例
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
     For a wide range of example queries, see the :ref:`Query Examples <query_examples>`
@@ -934,8 +932,8 @@ Get tweets by staff or superusers using a subquery:
         (User.is_staff == True) | (User.is_superuser == True))
     Tweet.select().where(Tweet.user.in_(staff_super))
 
-Sorting records
----------------
+レコードのソート
+-------------------
 
 To return rows in order, use the :py:meth:`~Query.order_by` method:
 
@@ -1035,8 +1033,8 @@ Or, to do things the "peewee" way:
              .group_by(User.username)
              .order_by(ntweets.desc())
 
-Getting random records
-----------------------
+ランダムなレコードの取得
+---------------------------
 
 Occasionally you may want to pull a random record from the database. You can
 accomplish this by ordering by the *random* or *rand* function (depending on
@@ -1056,8 +1054,8 @@ MySQL uses *Rand*:
     # Pick 5 lucky winners:
     LotterNumber.select().order_by(fn.Rand()).limit(5)
 
-Paginating records
-------------------
+レコードのページ制御
+-----------------------------
 
 The :py:meth:`~Query.paginate` method makes it easy to grab a *page* or
 records. :py:meth:`~Query.paginate` takes two parameters,
@@ -1085,8 +1083,8 @@ records. :py:meth:`~Query.paginate` takes two parameters,
 If you would like more granular control, you can always use
 :py:meth:`~Query.limit` and :py:meth:`~Query.offset`.
 
-Counting records
-----------------
+レコードのカウント
+---------------------
 
 You can count the number of rows in any select query:
 
@@ -1104,7 +1102,7 @@ results in SQL like:
 
     SELECT COUNT(1) FROM ( ... your query ... );
 
-Aggregating records
+レコードを集約する
 -------------------
 
 Suppose you have some users and want to get a list of them along with the count
@@ -1170,7 +1168,7 @@ Suppose we want to grab the associated count and store it on the tag:
              .group_by(Tag)
              .having(fn.Count(Photo.id) > 5))
 
-Retrieving Scalar Values
+スカラー値を取り出す
 ------------------------
 
 You can retrieve scalar values by calling :py:meth:`Query.scalar`. For
@@ -1192,7 +1190,7 @@ You can retrieve multiple scalar values by passing ``as_tuple=True``:
 
 .. _window-functions:
 
-Window functions
+Window 関数
 ----------------
 
 A :py:class:`Window` function refers to an aggregate function that operates on
@@ -1235,8 +1233,8 @@ id  counter  value
 5   3        100.0
 === ======== ======
 
-Ordered Windows
-^^^^^^^^^^^^^^^
+ソートされたウィンドウ
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Let's calculate a running sum of the ``value`` field. In order for it to be a
 "running" sum, we need it to be ordered, so we'll order with respect to the
@@ -1278,8 +1276,8 @@ and the previous value, when ordered by the ``id``:
     # 2     3.     2.  -- (3 - 1)
     # 3   100     97.  -- (100 - 3)
 
-Partitioned Windows
-^^^^^^^^^^^^^^^^^^^
+パーティションされたウィンドウ
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Let's calculate the average ``value`` for each distinct "counter" value. Notice
 that there are three possible values for the ``counter`` field (1, 2, and 3).
@@ -1324,8 +1322,8 @@ within each distinct ``counter`` group.
     # 2     3.    2
     # 3   100     1
 
-Bounded windows
-^^^^^^^^^^^^^^^
+境界のあるウィンドウ
+^^^^^^^^^^^^^^^^^^^^^^
 
 By default, window functions are evaluated using an *unbounded preceding* start
 for the window, and the *current row* as the end. We can change the bounds of
@@ -1388,8 +1386,8 @@ the sum from the current row to the last row.
     # 2     3.   103.  -- (3 + 100)
     # 3   100    100.  -- (100)
 
-Filtered Aggregates
-^^^^^^^^^^^^^^^^^^^
+フィルターされた集約
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Aggregate functions may also support filter functions (Postgres and Sqlite
 3.25+), which get translated into a ``FILTER (WHERE...)`` clause. Filter
@@ -1420,7 +1418,7 @@ respect to the ``id``, but we will filter-out any samples whose ``counter=2``.
     The call to :py:meth:`~Function.filter` must precede the call to
     :py:meth:`~Function.over`.
 
-Reusing Window Definitions
+ウィンドウ定義の再利用
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you intend to use the same window definition for multiple aggregates, you
@@ -1452,7 +1450,7 @@ and call several window functions using that window definition:
     # 2           3.    100.     1.    34.
     # 3         100.    NULL     3.   134.
 
-Multiple window definitions
+複数のウィンドウ定義
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In the previous example, we saw how to declare a :py:class:`Window` definition
@@ -1514,8 +1512,8 @@ a second window that extends this partitioning, and adds an ordering clause:
 
 .. _window-frame-types:
 
-Frame types: RANGE vs ROWS vs GROUPS
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+フレームタイプ: RANGE vs ROWS vs GROUPS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Depending on the frame type, the database will process ordered groups
 differently. Let's create two additional ``Sample`` rows to visualize the
@@ -1656,7 +1654,7 @@ previous group and the current group.
 
 .. _rowtypes:
 
-Retrieving row tuples / dictionaries / namedtuples
+行タプル／辞書／名前付きタプルの取り出し
 --------------------------------------------------
 
 Sometimes you do not need the overhead of creating model instances and simply
@@ -1696,7 +1694,7 @@ Similarly, you can return the rows from the cursor as dictionaries using
 
 .. _returning-clause:
 
-Returning Clause
+Returning 句
 ----------------
 
 :py:class:`PostgresqlDatabase` supports a ``RETURNING`` clause on ``UPDATE``,
@@ -1778,7 +1776,7 @@ Just as with :py:class:`Select` queries, you can specify various :ref:`result ro
 
 .. _cte:
 
-Common Table Expressions
+共通のテーブル表現
 ------------------------
 
 Peewee supports the inclusion of common table expressions (CTEs) in all types
@@ -1793,7 +1791,7 @@ To declare a :py:class:`Select` query for use as a CTE, use
 object. To indicate that a :py:class:`CTE` should be included as part of a
 query, use the :py:meth:`Query.with_cte` method, passing a list of CTE objects.
 
-Simple Example
+単純な例
 ^^^^^^^^^^^^^^
 
 For an example, let's say we have some data points that consist of a key and a
@@ -1849,7 +1847,7 @@ above-average values for their given group:
     # 'b', 2.7
     # 'b', 2.9
 
-Complex Example
+複雑な例
 ^^^^^^^^^^^^^^^
 
 For a more complete example, let's consider the following query which uses
@@ -1911,7 +1909,7 @@ With Peewee, we would write:
              .group_by(Order.region, Order.product)
              .with_cte(regional_sales, top_regions))
 
-Recursive CTEs
+再帰的 CTE
 ^^^^^^^^^^^^^^
 
 Peewee supports recursive CTEs. Recursive CTEs can be useful when, for example,
@@ -1975,7 +1973,7 @@ recursive CTE:
     # p2, 2, root->p2
     # c2-1, 3, root->p2->c2-1
 
-Foreign Keys and Joins
+外部キーと JOIN
 ----------------------
 
 This section have been moved into its own document: :ref:`relationships`.

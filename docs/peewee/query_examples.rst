@@ -1,7 +1,7 @@
 .. _query_examples:
 
 クエリーの例
-==============
+=====================
 
 以下のクエリーの例は `PostgreSQL Exercises <https://pgexercises.com/>`_
 のサイトから拝借してきたものです.サンプルのデータセットは

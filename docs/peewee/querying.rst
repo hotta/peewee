@@ -1,7 +1,7 @@
 .. _querying:
 
-クエリーの発行
-=================
+クエリーの発行（まだ途中）
+==========================
 
 この章では, リレーショナルデータベースに対して広く実行される, 基本的な CRUD 操作について述べます:
 
@@ -257,9 +257,9 @@ iterable(繰り返しループ)を *効率的に* *batch*-size の大きさの i
 他のテーブルからの一括ローディング
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If the data you would like to bulk load is stored in another table, you can
-also create *INSERT* queries whose source is a *SELECT* query. Use the
-:py:meth:`Model.insert_from` method:
+一括ロード対象のデータが別のテーブルに入っている場合, ソースが *SELECT*
+クエリーであるような *INSERT* クエリーを作成することもできます.
+:py:meth:`Model.insert_from` メソッドを使ってみてください:
 
 .. code-block:: python
 
@@ -269,7 +269,7 @@ also create *INSERT* queries whose source is a *SELECT* query. Use the
                fields=[TweetArchive.user, TweetArchive.message])
            .execute())
 
-The above query is equivalent to the following SQL:
+上記のクエリーは, 以下の SQL と同じ意味です:
 
 .. code-block:: sql
 
@@ -280,13 +280,13 @@ The above query is equivalent to the following SQL:
 既存のレコードを update する
 -------------------------------
 
-Once a model instance has a primary key, any subsequent call to
-:py:meth:`~Model.save` will result in an *UPDATE* rather than another *INSERT*.
-The model's primary key will not change:
+モデルインスタンスがプライマリキーを持っていれば, それ以降の :py:meth:`~Model.save`
+へのコールでは, 別レコードの *INSERT* ではなく *UPDATE* が行われるようになります.
+そのモデルのプライマリキーは変更されません:
 
 .. code-block:: pycon
 
-    >>> user.save()  # save() returns the number of rows modified.
+    >>> user.save()  # save() は変更された行数を返す
     1
     >>> user.id
     1
@@ -298,10 +298,9 @@ The model's primary key will not change:
     >>> huey.id
     2
 
-If you want to update multiple records, issue an *UPDATE* query. The following
-example will update all ``Tweet`` objects, marking them as *published*, if they
-were created before today. :py:meth:`Model.update` accepts keyword arguments
-where the keys correspond to the model's field names:
+複数のレコードを update したい場合は *UPDATE* クエリーを発行します.
+以下の例では昨日以前に作成された ``Tweet`` オブジェクトを update してそれらを *published* の状態にします.
+:py:meth:`Model.update` はキーワード引数を受け付けますが, その際のキーはモデルのフィールド名に対応します:
 
 .. code-block:: pycon
 
@@ -310,21 +309,21 @@ where the keys correspond to the model's field names:
     >>> query.execute()  # Returns the number of rows that were updated.
     4
 
-For more information, see the documentation on :py:meth:`Model.update`,
-:py:class:`Update` and :py:meth:`Model.bulk_update`.
+詳細は :py:meth:`Model.update`, :py:class:`Update`, :py:meth:`Model.bulk_update`
+のドキュメントを参照してください.
 
 .. note::
-    If you would like more information on performing atomic updates (such as
-    incrementing the value of a column), check out the :ref:`atomic update <atomic_updates>`
-    recipes.
+    (カラムの値をインクリメントするといった)アトミックな update の実行に関する詳細情報については,
+    :ref:`atomic update <atomic_updates>` レシピを参照してください.
 
 .. _atomic_updates:
 
 アトミックな update
 ----------------------
 
-Peewee allows you to perform atomic updates. Let's suppose we need to update
-some counters. The naive approach would be to write something like this:
+Peewee ではアトミックな update を実行できます.
+いくつかのカウンターを update する必要があるとしましょう.
+ネイティブなアプローチを使う場合は以下のようになるでしょう:
 
 .. code-block:: pycon
 
@@ -332,28 +331,27 @@ some counters. The naive approach would be to write something like this:
     ...     stat.counter += 1
     ...     stat.save()
 
-**Do not do this!** Not only is this slow, but it is also vulnerable to race
-conditions if multiple processes are updating the counter at the same time.
+**これをやってはいけません!** これは遅いだけではなく脆弱であり,
+複数のプロセスが同時にカウンターを update しようとしている場合に競合が発生する恐れがあります.
 
-Instead, you can update the counters atomically using :py:meth:`~Model.update`:
+代わりに :py:meth:`~Model.update` を使ってカウンターを自動的に update するようにしましょう:
 
 .. code-block:: pycon
 
     >>> query = Stat.update(counter=Stat.counter + 1).where(Stat.url == request.url)
     >>> query.execute()
 
-You can make these update statements as complex as you like. Let's give all our
-employees a bonus equal to their previous bonus plus 10% of their salary:
+以下のように複雑な update 文を作ることもできます.
+従業員へのボーナスを, 前回のボーナス支給額にその人の給与の 10% を上乗せした額としましょう:
 
 .. code-block:: pycon
 
     >>> query = Employee.update(bonus=(Employee.bonus + (Employee.salary * .1)))
-    >>> query.execute()  # Give everyone a bonus!
+    >>> query.execute()             # みんなにボーナスをやるぞ!
 
-We can even use a subquery to update the value of a column. Suppose we had a
-denormalized column on the ``User`` model that stored the number of tweets a
-user had made, and we updated this value periodically. Here is how you might
-write such a query:
+サブクエリーを使ってカラムの値を更新することもできます. ``User``
+モデルの中に非正規化されたカラムがあって, そこにはユーザがツイートを行った回数が入っており,
+これを定期的に更新することを考えます.これを実現するには以下のようになるでしょう:
 
 .. code-block:: pycon
 
@@ -364,12 +362,11 @@ write such a query:
 Upsert
 ^^^^^^
 
-Peewee provides support for varying types of upsert functionality. With SQLite
-prior to 3.24.0 and MySQL, Peewee offers the :py:meth:`~Model.replace`, which
-allows you to insert a record or, in the event of a constraint violation,
-replace the existing record.
+Peewee では変則的なタイプである upsert 機能をサポートしています.
+SQLite(3.24.0 以前)もしくは MySQL について, Peewee では :py:meth:`~Model.replace`
+を提供しており、これはレコードを insert して, その際に制約違反があれば既存のレコードを置き換えます.
 
-Example of using :py:meth:`~Model.replace` and :py:meth:`~Insert.on_conflict_replace`:
+:py:meth:`~Model.replace` と :py:meth:`~Insert.on_conflict_replace` の例を示します:
 
 .. code-block:: python
 
@@ -377,56 +374,25 @@ Example of using :py:meth:`~Model.replace` and :py:meth:`~Insert.on_conflict_rep
         username = TextField(unique=True)
         last_login = DateTimeField(null=True)
 
-    # Insert or update the user. The "last_login" value will be updated
-    # regardless of whether the user existed previously.
+    # ユーザを insert または update する. "last_login" の値は
+    # そのユーザが既存ユーザであるかどうかを問わずに update される.
     user_id = (User
                .replace(username='the-user', last_login=datetime.now())
                .execute())
 
-    # This query is equivalent:
+    # これも同等の動きをする:
     user_id = (User
                .insert(username='the-user', last_login=datetime.now())
                .on_conflict_replace()
                .execute())
 
 .. note::
-    In addition to *replace*, SQLite, MySQL and Postgresql provide an *ignore*
-    action (see: :py:meth:`~Insert.on_conflict_ignore`) if you simply wish to
-    insert and ignore any potential constraint violation.
+    もし insert した際に制約条件が発生したら単に無視したい場合, *replace* に加えて, 
+    SQLite, MySQL, Postgresql では *ignore* アクションを提供しています
+    ( :py:meth:`~Insert.on_conflict_ignore` を参照).
 
-**MySQL** supports upsert via the *ON DUPLICATE KEY UPDATE* clause. For
-example:
-
-.. code-block:: python
-
-    class User(Model):
-        username = TextField(unique=True)
-        last_login = DateTimeField(null=True)
-        login_count = IntegerField()
-
-    # Insert a new user.
-    User.create(username='huey', login_count=0)
-
-    # Simulate the user logging in. The login count and timestamp will be
-    # either created or updated correctly.
-    now = datetime.now()
-    rowid = (User
-             .insert(username='huey', last_login=now, login_count=1)
-             .on_conflict(
-                 preserve=[User.last_login],  # Use the value we would have inserted.
-                 update={User.login_count: User.login_count + 1})
-             .execute())
-
-In the above example, we could safely invoke the upsert query as many times as
-we wanted. The login count will be incremented atomically, the last login
-column will be updated, and no duplicate rows will be created.
-
-**Postgresql and SQLite** (3.24.0 and newer) provide a different syntax that
-allows for more granular control over which constraint violation should trigger
-the conflict resolution, and what values should be updated or preserved.
-
-Example of using :py:meth:`~Insert.on_conflict` to perform a Postgresql-style
-upsert (or SQLite 3.24+):
+**MySQL** では *ON DUPLICATE KEY UPDATE* 句を通した upsert をサポートしています.
+以下に例を示します:
 
 .. code-block:: python
 
@@ -435,32 +401,62 @@ upsert (or SQLite 3.24+):
         last_login = DateTimeField(null=True)
         login_count = IntegerField()
 
-    # Insert a new user.
+    # 新しいユーザを insert する
     User.create(username='huey', login_count=0)
 
-    # Simulate the user logging in. The login count and timestamp will be
-    # either created or updated correctly.
+    # ユーザのログインをシミュレートする. 
+    # ログインカウントとタイムスタンプの両方が正しく作成または update される.
     now = datetime.now()
     rowid = (User
              .insert(username='huey', last_login=now, login_count=1)
              .on_conflict(
-                 conflict_target=[User.username],  # Which constraint?
-                 preserve=[User.last_login],  # Use the value we would have inserted.
+                 preserve=[User.last_login],  # insert した時の値を使う
                  update={User.login_count: User.login_count + 1})
              .execute())
 
-In the above example, we could safely invoke the upsert query as many times as
-we wanted. The login count will be incremented atomically, the last login
-column will be updated, and no duplicate rows will be created.
+上記の例を使うと, 必要であれば何度でも upsert クエリーを発行できます.
+ログイン回数は自動的にインクリメントされ, last_login カラムは update され,
+重複行が発生することがありません.
+
+**Postgresql と SQLite** (3.24.0 以降)では, 別の文法により提供しています.
+これは, どの制約違反が競合解決のトリガーとなるべきなのか, およびどの値を更新／保持すべきかを,
+より細かい粒度で制御することが可能です.
+
+:py:meth:`~Insert.on_conflict` を使って Postgresql スタイル(もしくは SQLite 3.24+) で
+upsert する例を以下に示します:
+
+.. code-block:: python
+
+    class User(Model):
+        username = TextField(unique=True)
+        last_login = DateTimeField(null=True)
+        login_count = IntegerField()
+
+    # 新しいユーザを insert
+    User.create(username='huey', login_count=0)
+
+    # ユーザのログインをシミュレートする. 
+    # ログインカウントとタイムスタンプの両方が正しく作成または update される.
+    now = datetime.now()
+    rowid = (User
+             .insert(username='huey', last_login=now, login_count=1)
+             .on_conflict(
+                 conflict_target=[User.username],  # どの制約条件か?
+                 preserve=[User.last_login],       # insert した時の値を使う
+                 update={User.login_count: User.login_count + 1})
+             .execute())
+
+上記の例を使うと, 必要であれば何度でも upsert クエリーを発行できます.
+ログイン回数は自動的にインクリメントされ, last_login カラムは update され,
+重複行が発生することがありません.
 
 .. note::
-    The main difference between MySQL and Postgresql/SQLite is that Postgresql
-    and SQLite require that you specify a ``conflict_target``.
+    MySQL と Postgresql/SQLite との主な違いとしては, 後者は  ``conflict_target``
+    の指定が必要となります.
 
-Here is a more advanced (if contrived) example using the :py:class:`EXCLUDED`
-namespace. The :py:class:`EXCLUDED` helper allows us to reference values in the
-conflicting data. For our example, we'll assume a simple table mapping a unique
-key (string) to a value (integer):
+(もしこれが怪しげに見える場合は) :py:class:`EXCLUDED` 名前空間を使ったより高度な例を示します.
+:py:class:`EXCLUDED` ヘルパーを使うと, 競合するデータの中で値を参照できるようになります.
+以下の例ではユニークなキー(string)から値(integer)へのマッピングを行うシンプルなテーブルを想定します:
 
 .. code-block:: python
 
@@ -468,43 +464,38 @@ key (string) to a value (integer):
         key = CharField(unique=True)
         value = IntegerField()
 
-    # Create one row.
+    # 1行を作成
     KV.create(key='k1', value=1)
 
-    # Demonstrate usage of EXCLUDED.
-    # Here we will attempt to insert a new value for a given key. If that
-    # key already exists, then we will update its value with the *sum* of its
-    # original value and the value we attempted to insert -- provided that
-    # the new value is larger than the original value.
+    # EXCLUDED を使ったデモを行います.
+    # ここでは指定されたキーで新しい値を insert しようとしています.
+    # そのキーがすでに存在する場合, その値を元の値の *合計* で update し,
+    # その結果を insert します - 新しい値は元の値より大きくなるはずです.
     query = (KV.insert(key='k1', value=10)
              .on_conflict(conflict_target=[KV.key],
                           update={KV.value: KV.value + EXCLUDED.value},
                           where=(EXCLUDED.value > KV.value)))
 
-    # Executing the above query will result in the following data being
-    # present in the "kv" table:
-    # (key='k1', value=11)
+    # 上記のクエリーを発行すると, "kv" テーブルで既存のデータが
+    # (key='k1', value=11) のようになります:
     query.execute()
 
-    # If we attempted to execute the query *again*, then nothing would be
-    # updated, as the new value (10) is now less than the value in the
-    # original row (11).
+    # もしこのクエリーを *もう一度* 実行した場合, 何も更新されません.
+    # これは新しい値(10)は元の値(11)より小さいからです.
 
-For more information, see :py:meth:`Insert.on_conflict` and
-:py:class:`OnConflict`.
+詳細は :py:meth:`Insert.on_conflict` および :py:class:`OnConflict` を参照してください.
 
 レコードの削除
 ----------------
 
-To delete a single model instance, you can use the
-:py:meth:`Model.delete_instance` shortcut. :py:meth:`~Model.delete_instance`
-will delete the given model instance and can optionally delete any dependent
-objects recursively (by specifying `recursive=True`).
+単一モデルインスタンスの削除では :py:meth:`Model.delete_instance` ショットカットが使えます.
+:py:meth:`~Model.delete_instance` は指定されたモデルインスタンスを削除し,
+さらにオプション( `recursive=True` 指定)で これに依存するオブジェクトを再帰的に削除します.
 
 .. code-block:: pycon
 
     >>> user = User.get(User.id == 1)
-    >>> user.delete_instance()  # Returns the number of rows deleted.
+    >>> user.delete_instance()          # 削除件数が返される
     1
 
     >>> User.get(User.id == 1)
@@ -512,16 +503,16 @@ objects recursively (by specifying `recursive=True`).
     SQL: SELECT t1."id", t1."username" FROM "user" AS t1 WHERE t1."id" = ?
     PARAMS: [1]
 
-To delete an arbitrary set of rows, you can issue a *DELETE* query. The
-following will delete all ``Tweet`` objects that are over one year old:
+任意の行セットを削除する場合は *DELETE* クエリーを発行してください。
+以下の例では1年以上経過した ``Tweet`` オブジェクトを削除します.
 
 .. code-block:: pycon
 
     >>> query = Tweet.delete().where(Tweet.creation_date < one_year_ago)
-    >>> query.execute()  # Returns the number of rows deleted.
+    >>> query.execute()                 # 削除件数が返される
     7
 
-For more information, see the documentation on:
+詳細は以下のドキュメントを参照してください:
 
 * :py:meth:`Model.delete_instance`
 * :py:meth:`Model.delete`

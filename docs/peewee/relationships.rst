@@ -1,7 +1,7 @@
 .. _relationships:
 
-リレーションと JOIN
-=======================
+リレーションと JOIN（目次のみ）
+==================================
 
 In this document we'll cover how Peewee handles relationships between models.
 

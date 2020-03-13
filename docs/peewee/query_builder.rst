@@ -1,15 +1,14 @@
 .. _query-builder:
 
 クエリービルダー
-===================
+===========================
 
-Peewee's high-level :py:class:`Model` and :py:class:`Field` APIs are built upon
-lower-level :py:class:`Table` and :py:class:`Column` counterparts. While these
-lower-level APIs are not documented in as much detail as their high-level
-counterparts, this document will present an overview with examples that should
-hopefully allow you to experiment.
+Peewee の高レベルの :py:class:`Model` と :py:class:`Field` API は,
+低レベルの :py:class:`Table` と :py:class:`Column` という相手役の元に構築されています.
+これら低レベル API はその相手役である高レベル API ほど詳しくはドキュメント化されていないのですが,
+このドキュメントではその概要を利用例とともにお贈りすることで, あなたの実験の手助けになれればと思っています.
 
-We'll use the following schema:
+説明のために, 以下のスキーマを使います:
 
 .. code-block:: sql
 
@@ -34,22 +33,21 @@ We'll use the following schema:
 テーブルを定義する
 ---------------------
 
-There are two ways we can declare :py:class:`Table` objects for working with
-these tables:
+これらのテーブルを扱うにあたり, :py:class:`Table` オブジェクトを定義するやり方に二種類あります:
 
 .. code-block:: python
 
-    # Explicitly declare columns
+    # 明示的にカラムを宣言する
     Person = Table('person', ('id', 'first', 'last'))
 
     Note = Table('note', ('id', 'person_id', 'content', 'timestamp'))
 
-    # Do not declare columns, they will be accessed using magic ".c" attribute
+    # カラムを宣言しない. それらは ".c" マジック属性を使ってアクセスできる.
     Reminder = Table('reminder')
 
-Typically we will want to :py:meth:`~Table.bind` our tables to a database. This
-saves us having to pass the database explicitly every time we wish to execute a
-query on the table:
+基本的にはデータベースに対して私達のテーブルを :py:meth:`~Table.bind` します.これにより,
+そのテーブルに対するクエリーを実行するたびに毎回 明示的にデータベースを渡す手間を省きます:
+
 
 .. code-block:: python
 
@@ -61,7 +59,7 @@ query on the table:
 Select クエリー
 ------------------
 
-To select the first three notes and print their content, we can write:
+note の先頭３つを select してその中身を表示するには以下のように書きます:
 
 .. code-block:: python
 
@@ -70,18 +68,16 @@ To select the first three notes and print their content, we can write:
         print(note_dict['content'])
 
 .. note::
-    By default, rows will be returned as dictionaries. You can use the
-    :py:meth:`~BaseQuery.tuples`, :py:meth:`~BaseQuery.namedtuples` or
-    :py:meth:`~BaseQuery.objects` methods to specify a different container for
-    the row data, if you wish.
+    デフォルトでは行は辞書として返されます. 必要であれば行データに対して
+    :py:meth:`~BaseQuery.tuples` , :py:meth:`~BaseQuery.namedtuples` , :py:meth:`~BaseQuery.objects` 
+    メソッドにより別のコンテナを指定します.
 
-Because we didn't specify any columns, all the columns we defined in the
-note's :py:class:`Table` constructor will be selected. This won't work for
-Reminder, as we didn't specify any columns at all.
+ここでは何もカラムを指定していないので, note の :py:class:`Table` 
+コンストラクタで定義されたすべてのカラムが select されます.
+reminder テーブルについてはカラムを一切指定していないので,このやり方は動きません.
 
-To select all notes published in 2018 along with the name of the creator, we
-will use :py:meth:`~BaseQuery.join`. We'll also request that rows be returned
-as *namedtuple* objects:
+2018 年に発行されたすべての note をその作成者とともに select するには :py:meth:`~BaseQuery.join`
+を使います. さらに行が *名前付きタプル* オブジェクトとして返されるように要求します:
 
 .. code-block:: python
 
@@ -95,9 +91,9 @@ as *namedtuple* objects:
     for row in query:
         print(row.timestamp, '-', row.content, '-', row.first, row.last)
 
-Let's query for the most prolific people, that is, get the people who have
-created the most notes. This introduces calling a SQL function (COUNT), which
-is accomplished using the ``fn`` object:
+誰が最も頻繁に情報を発信していたかを問い合わせてみましょう. すなわち,
+最も多くのメモ(note)を作成した人たちを取得します. これは SQL 関数(COUNT)の利用例となりますが,
+``fn`` オブジェクトを使って実現できます.
 
 .. code-block:: python
 
@@ -111,30 +107,29 @@ is accomplished using the ``fn`` object:
         print(row['name'], row['count'])
 
 There are a couple things to note in the above query:
+上記のクエリーの中で, いくつか重要なことがあります:
 
-* We store an expression in a variable (``name``), then use it in the query.
-* We call SQL functions using ``fn.<function>(...)`` passing arguments as if
-  it were a normal Python function.
-* The :py:meth:`~ColumnBase.alias` method is used to specify the name used for
-  a column or calculation.
+* まず (``name``) 変数の中に評価式を入れ, それをクエリーで使います.
+* SQL 関数は ``fn.<function>(...)`` で呼び出します. 引数はあたかも通常の Python の関数のようにして渡します.
+* カラムもしくは計算で使う名前を指定するために :py:meth:`~ColumnBase.alias` メソッドが使われます.
 
-As a more complex example, we'll generate a list of all people and the contents
-and timestamp of their most recently-published note. To do this, we will end up
-using the Note table twice in different contexts within the same query, which
-will require us to use a table alias.
+より複雑な例として, すべての人とその content, およびそれぞれの人が最後に発行した note の]
+timestamp のリストを生成してみましょう.これを行うには, 結局同じクエリーの中で note
+テーブルを２回, それぞれ異なったコンテキストで使う必要があります. このために, 
+テーブルの別名(alias)を使う必要があります.
+
 
 .. code-block:: python
 
-    # Start with the query that calculates the timestamp of the most recent
-    # note for each person.
+    # それぞれの人について, 最も最近の note のタイムスタンプを計算するクエリーから始める.
     NA = Note.alias('na')
     max_note = (NA
                 .select(NA.person_id, fn.MAX(NA.timestamp).alias('max_ts'))
                 .group_by(NA.person_id)
                 .alias('max_note'))
 
-    # Now we'll select from the note table, joining on both the subquery and
-    # on the person table to construct the result set.
+    # つぎに note テーブルから select し, サブクエリーと person テーブルの
+    # 両方を JOIN して 結果セットを構築する.
     query = (Note
              .select(Note.content, Note.timestamp, Person.first, Person.last)
              .join(max_note, on=((max_note.c.person_id == Note.person_id) &
@@ -145,15 +140,14 @@ will require us to use a table alias.
     for row in query.namedtuples():
         print(row.first, row.last, ':', row.timestamp, '-', row.content)
 
-In the join predicate for the join on the *max_note* subquery, we can reference
-columns in the subquery using the magical ".c" attribute. So,
-*max_note.c.max_ts* is translated into "the max_ts column value from the
-max_note subquery".
+JOIN の中では *max_note* サブクエリーへの JOIN を記載し, ".c" 
+マジック属性を使ってサブクエリーの中のカラムを参照できます. これにより *max_note.c.max_ts*
+は "max_note サブクエリー由来の max_tx カラム" に変換されます.
 
-We can also use the ".c" magic attribute to access columns on tables that do
-not explicitly define their columns, like we did with the Reminder table.
-Here's a simple query to get all reminders for today, along with their
-associated note content:
+".c" マジック属性を使うと, reminder テーブルのように明示的にカラムを定義していなくても,
+テーブルのカラムへのアクセスが可能になります. 以下は本日の reminder を,
+それと関連する note の content とともに取得するシンプルなクエリーです:
+
 
 .. code-block:: python
 
@@ -169,33 +163,32 @@ associated note content:
         print(row['alarm'], row['content'])
 
 .. note::
-    The ".c" attribute will not work on tables that explicitly define their
-    columns, to prevent confusion.
+    混乱を避けるため, カラムを明示的に定義したテーブルに対しては,
+    ".c" 属性は動かないようになっています.
 
 Insert クエリー
 -------------------
 
-Inserting data is straightforward. We can specify data to
-:py:meth:`~Table.insert` in two different ways (in both cases, the ID of the
-new row is returned):
+データの insert は単純です. :py:meth:`~Table.insert` に対してデータを指定するのには,
+二通りの方法があります(いずれの方法についても, 新しい行の ID が返されます):
 
 .. code-block:: python
 
-    # Using keyword arguments:
+    # キーワード引数を使う:
     zaizee_id = Person.insert(first='zaizee', last='cat').execute()
 
-    # Using column: value mappings:
+    # カラムと値のマッピングを使う:
     Note.insert({
         Note.person_id: zaizee_id,
         Note.content: 'meeeeowwww',
         Note.timestamp: datetime.datetime.now()}).execute()
 
-It is easy to bulk-insert data, just pass in either:
+データの一括 insert は簡単です. 以下のいずれかを渡してあげるだけです:
 
-* A list of dictionaries (all must have the same keys/columns).
-* A list of tuples, if the columns are specified explicitly.
+* 辞書のリスト(すべて同じキー/カラムでなければなりません)
+* タプルのリスト(カラムが明示的に指定されている場合)
 
-Examples:
+使用例:
 
 .. code-block:: python
 
@@ -204,11 +197,10 @@ Examples:
         {'first': 'Herb', 'last': 'Bar'},
         {'first': 'Nuggie', 'last': 'Bar'}]
 
-    # Inserting multiple rows returns the ID of the last-inserted row.
+    # 複数の行を insert すると, 最後に insert された行の ID が返される.
     last_id = Person.insert(people).execute()
 
-    # We can also specify row tuples, so long as we tell Peewee which
-    # columns the tuple values correspond to:
+    # 行タプルを指定することも可能(どのカラムとタプル値が対応するのかを Peewee に教えてやる必要あり).
     people = [
         ('Bob', 'Foo'),
         ('Herb', 'Bar'),
@@ -218,34 +210,34 @@ Examples:
 Update クエリー
 -----------------------
 
-:py:meth:`~Table.update` queries accept either keyword arguments or a
-dictionary mapping column to value, just like :py:meth:`~Table.insert`.
+:py:meth:`~Table.update` クエリーは, キーワード引数とカラムから値へのマッピング辞書のいずれも受け付けます.
+:py:meth:`~Table.insert` と同様です.
 
-Examples:
+
+使用例:
 
 .. code-block:: python
 
-    # "Bob" changed his last name from "Foo" to "Baze".
+    # "Bob" は自分の姓を "Foo" から "Baze" に変更した.
     nrows = (Person
              .update(last='Baze')
              .where((Person.first == 'Bob') &
                     (Person.last == 'Foo'))
              .execute())
 
-    # Use dictionary mapping column to value.
+    # カラム→値のマッピング辞書を使う
     nrows = (Person
              .update({Person.last: 'Baze'})
              .where((Person.first == 'Bob') &
                     (Person.last == 'Foo'))
              .execute())
 
-You can also use expressions as the value to perform an atomic update. Imagine
-we have a *PageView* table and we need to atomically increment the page-view
-count for some URL:
+表現式を値として使うことでアトミックな update を行うこともできます. *PageView* テーブルのある
+URL について, ページビューのカウントをアトミックにインクリメントする必要がある場合の例を示します:
 
 .. code-block:: python
 
-    # Do an atomic update:
+    # アトミックな update を行う:
     (PageView
      .update({PageView.count: PageView.count + 1})
      .where(PageView.url == some_url)
@@ -254,42 +246,43 @@ count for some URL:
 Delete クエリー
 ---------------------
 
-:py:meth:`~Table.delete` queries are simplest of all, as they do not accept any
-arguments:
+:py:meth:`~Table.delete` は何も引数を取らないので, もっともシンブルです:
 
 .. code-block:: python
 
-    # Delete all notes created before 2018, returning number deleted.
+    # 2018 年以前に作成された note をすべて削除して, 削除件数を返す.
     n = Note.delete().where(Note.timestamp < datetime.date(2018, 1, 1)).execute()
 
-Because DELETE (and UPDATE) queries do not support joins, we can use subqueries
-to delete rows based on values in related tables. For example, here is how you
-would delete all notes by anyone whose last name is "Foo":
+DELETE(と UPDATE)クエリーは JOIN をサポートしません.
+関連するテーブルの値に基づいて行を削除するにはサブクエリーを使います.
+たとえば, 以下は姓が "Foo" であるユーザの note をすべて削除する例です:
+
 
 .. code-block:: python
 
-    # Get the id of all people whose last name is "Foo".
+    # 姓が "Foo" であるユーザの ID を取得.
     foo_people = Person.select(Person.id).where(Person.last == 'Foo')
 
-    # Delete all notes by any person whose ID is in the previous query.
+    # 直前のクエリーに ID がある人による note をすべて削除.
     Note.delete().where(Note.person_id.in_(foo_people)).execute()
 
 クエリーオプション
 ---------------------
 
-One of the fundamental limitations of the abstractions provided by Peewee 2.x
-was the absence of a class that represented a structured query with no relation
-to a given model class.
+Peewee 2.x で提供されている抽象化に関する基本的な制限のひとつに,
+指定されたモデルクラスへのリレーションがないような構造化クエリーを表現するためのクラスがなかったというのがあります.
 
-An example of this might be computing aggregate values over a subquery. For
-example, the :py:meth:`~SelectBase.count` method, which returns the count of
-rows in an arbitrary query, is implemented by wrapping the query:
+
+この例では, サブクエリーに対する集約値を計算することがあるかもしれません。
+たとえば :py:meth:`~SelectBase.count` メソッドは人氏のクエリーの行数を返しますが,
+これはクエリーをラップすることにより実装されています:
+
 
 .. code-block:: sql
 
     SELECT COUNT(1) FROM (...)
 
-To accomplish this with Peewee, the implementation is written in this way:
+これを Peewee で実現するには, 以下のような方法で実装することになります:
 
 .. code-block:: python
 
@@ -297,11 +290,10 @@ To accomplish this with Peewee, the implementation is written in this way:
         # Select([source1, ... sourcen], [column1, ...columnn])
         wrapped = Select(from_list=[query], columns=[fn.COUNT(SQL('1'))])
         curs = wrapped.tuples().execute(db)
-        return curs[0][0]  # Return first column from first row of result.
+        return curs[0][0]       # 結果の１行目の最初のカラムを返す
 
-We can actually express this more concisely using the
-:py:meth:`~SelectBase.scalar` method, which is suitable for returning values
-from aggregate queries:
+実際には :py:meth:`~SelectBase.scalar` メソッドを使うと, もっと簡潔に表現できます.
+これは集約クエリーからの値を返すのに適しています:
 
 .. code-block:: python
 
@@ -309,8 +301,8 @@ from aggregate queries:
         wrapped = Select(from_list=[query], columns=[fn.COUNT(SQL('1'))])
         return wrapped.scalar(db)
 
-The :ref:`query_examples` document has a more complex example, in which we
-write a query for a facility with the highest number of available slots booked:
+:ref:`query_examples` ドキュメントにはより複雑な例があります. 
+これは, 予約対象の時間枠が最も空いている施設を見つけるようなクエリーです:
 
 The SQL we wish to express is:
 
@@ -324,12 +316,11 @@ The SQL we wish to express is:
     ) AS ranked
     WHERE rank = 1
 
-We can express this fairly elegantly by using a plain :py:class:`Select` for
-the outer query:
+これを, 外側のクエリーで素の :py:class:`Select` を使い, かなりすっきりと表現できます:
 
 .. code-block:: python
 
-    # Store rank expression in variable for readability.
+    # 読みやすいように, 順位の表現を変数に保存しておく.
     rank_expr = fn.rank().over(order_by=[fn.SUM(Booking.slots).desc()])
 
     subq = (Booking
@@ -337,18 +328,17 @@ the outer query:
                     rank_expr.alias('rank'))
             .group_by(Booking.facility))
 
-    # Use a plain "Select" to create outer query.
+    # 素の "Select" を使って外側のクエリーを作成する
     query = (Select(columns=[subq.c.facid, subq.c.total])
              .from_(subq)
              .where(subq.c.rank == 1)
              .tuples())
 
-    # Iterate over the resulting facility ID(s) and total(s):
+    # 結果をイテレートして施設 ID と合計を取り出す
     for facid, total in query.execute(db):
         print(facid, total)
 
-For another example, let's create a recursive common table expression to
-calculate the first 10 fibonacci numbers:
+別の例として, 再帰の共有テーブル表現を使ってフィボナッチ数列の最初の 10 個を計算してみましょう.
 
 .. code-block:: python
 
@@ -368,7 +358,7 @@ calculate the first 10 fibonacci numbers:
 
     results = list(query.execute(db))
 
-    # Generates the following result list:
+    # 以下のリストが生成されます:
     [{'fib_n': 0, 'n': 1},
      {'fib_n': 1, 'n': 2},
      {'fib_n': 1, 'n': 3},
@@ -383,8 +373,8 @@ calculate the first 10 fibonacci numbers:
 さらに
 -------------
 
-For a description of the various classes used to describe a SQL AST, see the
-:ref:`query builder API documentation <query-builder-api>`.
+SQL AST を記述するのに使われるさまざまなクラスの解説については,
+:ref:`クエリービルダーの API documentation <query-builder-api>` を参照してください.
 
-If you're interested in learning more, you can also check out the `project
-source code <https://github.com/coleifer/peewee>`_.
+より深く学びたい場合, `Peewee プロジェクトのソースコード <https://github.com/coleifer/peewee>`_
+もチェックしてみてください.

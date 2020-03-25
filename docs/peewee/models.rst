@@ -1,6 +1,6 @@
 .. _models:
 
-モデルとフィールド（まだ途中）
+モデルとフィールド（目次のみ）
 ================================
 
 データベースのコンセプトにマップされる,すべての :py:class:`Model` クラス,
@@ -86,8 +86,8 @@ Model インスタンス       データベーステーブルの行
 
 .. _fields:
 
-Fields
-------
+フィールド
+----------
 
 The :py:class:`Field` class is used to describe the mapping of
 :py:class:`Model` attributes to database columns. Each field type has a
@@ -145,7 +145,7 @@ Field types table
 ^^^^^^^^^^^^^^^^^
 
 =====================   =================   =================   =================
-Field Type              Sqlite              Postgresql          MySQL
+フィールドの型           Sqlite              Postgresql          MySQL
 =====================   =================   =================   =================
 ``AutoField``           integer             serial              integer
 ``BigAutoField``        integer             bigserial           bigint
@@ -181,7 +181,7 @@ Field Type              Sqlite              Postgresql          MySQL
     * :ref:`custom-fields`
     * :py:class:`Database`, particularly the ``fields`` parameter.
 
-Field initialization arguments
+フィールド初期化用の引数
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Parameters accepted by all field types and their default values:
@@ -201,11 +201,11 @@ Parameters accepted by all field types and their default values:
 * ``verbose_name = None`` -- string representing the "user-friendly" name of this field
 * ``index_type = None`` -- specify a custom index-type, e.g. for Postgres you might specify a ``'BRIN'`` or ``'GIN'`` index.
 
-Some fields take special parameters...
+特殊なパラメータを取るフィールド
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +--------------------------------+------------------------------------------------+
-| Field type                     | Special Parameters                             |
+| フィールドの型                 | 特殊なパラメータ                               |
 +================================+================================================+
 | :py:class:`CharField`          | ``max_length``                                 |
 +--------------------------------+------------------------------------------------+
@@ -239,8 +239,8 @@ Some fields take special parameters...
     To add database (server-side) constraints, use the ``constraints``
     parameter.
 
-Default field values
-^^^^^^^^^^^^^^^^^^^^
+フィールドのデフォルト値
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Peewee can provide default values for fields when objects are created. For
 example to have an ``IntegerField`` default to zero rather than ``NULL``, you
@@ -294,8 +294,8 @@ use the ``constraints`` parameter to specify the server default:
     **Remember:** when using the ``default`` parameter, the values are set by
     Peewee rather than being a part of the actual table and column definition.
 
-ForeignKeyField
-^^^^^^^^^^^^^^^
+外部キーフィールド
+^^^^^^^^^^^^^^^^^^^
 
 :py:class:`ForeignKeyField` is a special field type that allows one model to
 reference another. Typically a foreign key will contain the primary key of the
@@ -384,7 +384,7 @@ example:
     # user1  another from user1
     # user2  tweet from user1
 
-ForeignKeyField Back-references
+外部キーフィールドの後方参照
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :py:class:`ForeignKeyField` allows for a backreferencing property to be bound
@@ -408,8 +408,8 @@ using the parameter ``backref``:
         print(message)
 
 
-DateTimeField, DateField and TimeField
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+DateTimeフィールド, Dateフィールド,Timeフィールド
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The three fields devoted to working with dates and times have special properties
 which allow access to things like the year, month, hour, etc.
@@ -448,8 +448,8 @@ have an event attached:
     be formatted so they are sorted lexicographically. That is why they are
     stored, by default, as ``YYYY-MM-DD HH:MM:SS``.
 
-BitField and BigBitField
-^^^^^^^^^^^^^^^^^^^^^^^^
+BitフィールドとBigBitフィールド
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :py:class:`BitField` and :py:class:`BigBitField` are new as of 3.0.0. The
 former provides a subclass of :py:class:`IntegerField` that is suitable for
@@ -531,8 +531,8 @@ Example usage:
     assert bitmap.data.toggle_bit(63) is True
     assert bitmap.data.is_set(63)
 
-BareField
-^^^^^^^^^
+Bareフィールド
+^^^^^^^^^^^^^^^
 
 The :py:class:`BareField` class is intended to be used only with SQLite. Since
 SQLite uses dynamic typing and data-types are not enforced, it can be perfectly
@@ -567,8 +567,8 @@ Example:
 
 .. _custom-fields:
 
-Creating a custom field
-^^^^^^^^^^^^^^^^^^^^^^^
+カスタムフィールドを作成する
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It is easy to add support for custom field types in peewee. In this example we
 will create a UUID field for postgresql (which has a native UUID column type).
@@ -630,8 +630,8 @@ like *contains* and *update*. You can specify :ref:`custom operations
 <custom-operators>` as well. For example code, check out the source code for
 the :py:class:`HStoreField`, in ``playhouse.postgres_ext``.
 
-Field-naming conflicts
-^^^^^^^^^^^^^^^^^^^^^^
+フィールド命名における衝突
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :py:class:`Model` classes implement a number of class- and instance-methods,
 for example :py:meth:`Model.save` or :py:meth:`Model.create`. If you declare a
@@ -657,7 +657,7 @@ name for the field attribute:
         update_ = TimestampField(column_name='update')
 
 
-Creating model tables
+モデルテーブルの作成
 ---------------------
 
 In order to start using our models, its necessary to open a connection to the
@@ -693,8 +693,8 @@ either:
 
 .. _model-options:
 
-Model options and table metadata
---------------------------------
+モデルオプションとテーブルのメタデータ
+---------------------------------------
 
 In order not to pollute the model namespace, model-specific configuration is
 placed in a special class called *Meta* (a convention borrowed from the django
@@ -754,7 +754,7 @@ options are inheritable, some are table-specific and will not be inherited by
 subclasses.
 
 ======================  ====================================================== ====================
-Option                  Meaning                                                Inheritable?
+オプション               意味                                                   継承可能？
 ======================  ====================================================== ====================
 ``database``            database for model                                     yes
 ``table_name``          name of the table to store data                        no
@@ -819,7 +819,7 @@ Examples:
 
 .. _table_names:
 
-Table Names
+テーブル名
 ^^^^^^^^^^^
 
 By default Peewee will automatically generate a table name based on the name of
@@ -832,7 +832,7 @@ This table shows the differences in how a model name is converted to a SQL
 table name, depending on the value of ``legacy_table_names``:
 
 =================== ========================= ==============================
-Model name          legacy_table_names=True   legacy_table_names=False (new)
+モデル名             legacy_table_names=True   legacy_table_names=False (新)
 =================== ========================= ==============================
 User                user                      user
 UserProfile         userprofile               user_profile
@@ -883,14 +883,14 @@ implement this as a table function:
 
 .. _model_indexes:
 
-Indexes and Constraints
+インデックスと制約
 -----------------------
 
 Peewee can create indexes on single or multiple columns, optionally including a
 *UNIQUE* constraint. Peewee also supports user-defined constraints on both
 models and fields.
 
-Single-column indexes and constraints
+単一カラムインデックスと制約
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Single column indexes are defined using field initialization parameters. The
@@ -915,8 +915,8 @@ the schema, or add a ``CHECK`` constraint, for example:
         created = DateTimeField(
             constraints=[SQL("DEFAULT (datetime('now'))")])
 
-Multi-column indexes
-^^^^^^^^^^^^^^^^^^^^
+複数カラムインデックス
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Multi-column indexes may be defined as *Meta* attributes using a nested tuple.
 Each database index is a 2-tuple, the first part of which is a tuple of the
@@ -950,8 +950,8 @@ should be unique.
                 (('first_name', 'last_name'), True),  # Note the trailing comma!
             )
 
-Advanced Index Creation
-^^^^^^^^^^^^^^^^^^^^^^^
+より高度なインデックスの作成
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Peewee supports a more structured API for declaring indexes on a model using
 the :py:meth:`Model.add_index` method or by directly using the
@@ -1002,7 +1002,7 @@ For more information, see:
 * :py:class:`ModelIndex`
 * :py:class:`Index`
 
-Table constraints
+テーブル制約
 ^^^^^^^^^^^^^^^^^
 
 Peewee allows you to add arbitrary constraints to your :py:class:`Model`, that
@@ -1044,7 +1044,7 @@ You can also implement ``CHECK`` constraints at the table level:
 
 .. _non_integer_primary_keys:
 
-Primary Keys, Composite Keys and other Tricks
+プライマリキー,複合キー,その他のトリック
 ---------------------------------------------
 
 The :py:class:`AutoField` is used to identify an auto-incrementing integer
@@ -1115,7 +1115,7 @@ such as trivial many-to-many junction tables:
 In the extremely rare case you wish to declare a model with *no* primary key,
 you can specify ``primary_key = False`` in the model ``Meta`` options.
 
-Non-integer primary keys
+整数以外のプライマリキー
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you would like use a non-integer primary key (which I generally don't
@@ -1159,7 +1159,7 @@ manually. When we call save() for the first time, pass in ``force_insert = True`
 
 .. _composite-key:
 
-Composite primary keys
+複合プライマリキー
 ^^^^^^^^^^^^^^^^^^^^^^
 
 Peewee has very basic support for composite keys.  In order to use a composite
@@ -1182,7 +1182,7 @@ key, you must set the ``primary_key`` attribute of the model options to a
     model that has a composite primary key, replicate the columns on the
     related model and add a custom accessor (e.g. a property).
 
-Manually specifying primary keys
+プライマリキーの手動設定
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Sometimes you do not want the database to automatically generate a value for
@@ -1228,8 +1228,8 @@ the :py:class:`AutoField` field type, but use a normal
     >>> User.get(User.username == 'somebody').id
     999
 
-Models without a Primary Key
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+プライマリキーを持たないモデル
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you wish to create a model with no primary key, you can specify
 ``primary_key = False`` in the inner ``Meta`` class:
@@ -1258,7 +1258,7 @@ This will yield the following DDL:
     (you can instead use :py:meth:`~Model.insert`, :py:meth:`~Model.update` and
     :py:meth:`~Model.delete`).
 
-Self-referential foreign keys
+自己参照をする外部キー
 -----------------------------
 
 When creating a hierarchical structure it is necessary to create a
@@ -1296,7 +1296,7 @@ the category and parent model using a self-join:
 
 .. _circular-fks:
 
-Circular foreign key dependencies
+循環外部キーの依存関係
 ---------------------------------
 
 Sometimes it happens that you will create a circular dependency between two

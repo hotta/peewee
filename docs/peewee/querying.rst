@@ -731,49 +731,50 @@ Peewee ではインデックスやスライス操作を使うだけでなく、�
 巨大な結果セットをイテレートする
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default peewee will cache the rows returned when iterating over a
-:py:class:`Select` query. This is an optimization to allow multiple iterations
-as well as indexing and slicing without causing additional queries. This
-caching can be problematic, however, when you plan to iterate over a large
-number of rows.
+:py:class:`Select` クエリーを通してイテレートする場合、peewee はデフォルトで
+返された行をキャッシュします。これは、結果セットへのインデックスアクセスや
+スライシングだけでなく、複数回のイテレートの場合においても追加のクエリーを発生
+させないための最適化の一環です。しかしながら、大量の行に対するイテレートを行う
+場合、このキャッシュ処理が問題となる場合もあります。
 
-To reduce the amount of memory used by peewee when iterating over a query, use
-the :py:meth:`~BaseQuery.iterator` method. This method allows you to iterate
-without caching each model returned, using much less memory when iterating over
-large result sets.
+クエリーを通したイテレーションにおいて peewee のメモリ使用量を減らすために、
+:py:meth:`~BaseQuery.iterator` メソッドを使ってください。このメソッドは、
+それぞれのモデルを返す際にキャッシュをしないので、大量の結果セットに対する
+イテレートがより少ないメモリ使用量で実行できます。
 
 .. code-block:: python
 
-    # Let's assume we've got 10 million stat objects to dump to a csv file.
+    # CSVファイルのダンプの際に、1千万の stat オブジェクトが返されるとする。
     stats = Stat.select()
 
-    # Our imaginary serializer class
+    # 想像上のシリアライザクラス
     serializer = CSVSerializer()
 
-    # Loop over all the stats and serialize.
+    # 全 stat をループしながらシリアライズする
     for stat in stats.iterator():
         serializer.serialize_object(stat)
 
-For simple queries you can see further speed improvements by returning rows as
-dictionaries, namedtuples or tuples. The following methods can be used on any
-:py:class:`Select` query to change the result row type:
+単純なクエリーの場合、行を辞書や名前付きタプルもしくはタプルで返すことで、さらなる
+高速化が期待できます。 :py:class:`Select` クエリーにおいて以下のメソッドを使う
+ことで、結果の行の型を変更できます:
 
 * :py:meth:`~BaseQuery.dicts`
 * :py:meth:`~BaseQuery.namedtuples`
 * :py:meth:`~BaseQuery.tuples`
 
-Don't forget to append the :py:meth:`~BaseQuery.iterator` method call to also
-reduce memory consumption. For example, the above code might look like:
+:py:meth:`~BaseQuery.iterator` メソッドのコールを追加することでもメモリ使用量を
+減らせることを忘れないでください。たとえば上記のコードであれば以下のようになります:
 
 .. code-block:: python
 
-    # Let's assume we've got 10 million stat objects to dump to a csv file.
+    # CSVファイルのダンプの際に、1千万の stat オブジェクトが返されるとする。
     stats = Stat.select()
 
-    # Our imaginary serializer class
+    # 想像上のシリアライザクラス
     serializer = CSVSerializer()
 
-    # Loop over all the stats (rendered as tuples, without caching) and serialize.
+    # 全 stat をループしながら（キャッシュせずにタプルとして結果を生成しつつ）
+    # シリアライズする
     for stat_tuple in stats.tuples().iterator():
         serializer.serialize_tuple(stat_tuple)
 

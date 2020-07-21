@@ -521,23 +521,24 @@ upsert する例を以下に示します:
 単一のレコードを select する
 ---------------------------------
 
-You can use the :py:meth:`Model.get` method to retrieve a single instance
-matching the given query. For primary-key lookups, you can also use the
-shortcut method :py:meth:`Model.get_by_id`.
+:py:meth:`Model.get` メソッドを使って、指定されたクエリーにマッチする
+単一のインスタンスを取り出すことができます. プライマリキーを検索する場合、
+:py:meth:`Model.get_by_id` というショートカットメソッドを使うことも
+できます。
 
-This method is a shortcut that calls :py:meth:`Model.select` with the given
-query, but limits the result set to a single row. Additionally, if no model
-matches the given query, a ``DoesNotExist`` exception will be raised.
+このメソッドは、指定されたクエリーを使って :py:meth:`Model.select` を呼ぶ
+ことへのショートカットです。さらに、指定されたクエリーにマッチするモデルが
+なかった場合、 ``DoesNotExist`` 例外が送出されます。
 
 .. code-block:: pycon
 
     >>> User.get(User.id == 1)
     <__main__.User object at 0x25294d0>
 
-    >>> User.get_by_id(1)  # Same as above.
+    >>> User.get_by_id(1)  # 上と同じ.
     <__main__.User object at 0x252df10>
 
-    >>> User[1]  # Also same as above.
+    >>> User[1]  # これも上と同じ.
     <__main__.User object at 0x252dd10>
 
     >>> User.get(User.id == 1).username
@@ -551,8 +552,9 @@ matches the given query, a ``DoesNotExist`` exception will be raised.
     SQL: SELECT t1."id", t1."username" FROM "user" AS t1 WHERE t1."username" = ?
     PARAMS: ['nobody']
 
-For more advanced operations, you can use :py:meth:`SelectBase.get`. The
-following query retrieves the latest tweet from the user named *charlie*:
+さらに高度な操作を行いたい場合、 :py:meth:`SelectBase.get` が使えます。
+以下のクエリーでは *charlie* という名前のユーザからの、最新のツイートを
+取り出しています。:
 
 .. code-block:: pycon
 
@@ -564,7 +566,7 @@ following query retrieves the latest tweet from the user named *charlie*:
     ...  .get())
     <__main__.Tweet object at 0x2623410>
 
-For more information, see the documentation on:
+詳細は以下のドキュメントを参照してください:
 
 * :py:meth:`Model.get`
 * :py:meth:`Model.get_by_id`
@@ -576,16 +578,17 @@ For more information, see the documentation on:
 あれば get なければ create
 -------------------------------
 
-Peewee has one helper method for performing "get/create" type operations:
-:py:meth:`Model.get_or_create`, which first attempts to retrieve the matching
-row. Failing that, a new row will be created.
+Peewee では get/create タイプの操作を実行するヘルパーメソッド:
+:py:meth:`Model.get_or_create` を備えています。これは、まずマッチする行を
+取り出そうとします。これに失敗すると、新しい行が作られます。
 
-For "create or get" type logic, typically one would rely on a *unique*
-constraint or primary key to prevent the creation of duplicate objects. As an
-example, let's say we wish to implement registering a new user account using
-the :ref:`example User model <blog-models>`. The *User* model has a *unique*
-constraint on the username field, so we will rely on the database's integrity
-guarantees to ensure we don't end up with duplicate usernames:
+"create または get" タイプのロジックにおいては、一般的に *unique* 制約
+もしくはプライマリキーにより、重複したオブジェクトを作るのを防いでいます。
+一例として、ここでは :ref:`example User model <blog-models>` を使って
+新しいユーザーアカウントを登録するための実装をしたいものとします。
+*User* モデルは username フィールドについて *unique* 制約を持っているため、
+私達はデータベースの整合性保証の枠組みに依存することで、重複した username
+を生成してしまうこと防げます:
 
 .. code-block:: python
 
@@ -593,33 +596,32 @@ guarantees to ensure we don't end up with duplicate usernames:
         with db.atomic():
             return User.create(username=username)
     except peewee.IntegrityError:
-        # `username` is a unique column, so this username already exists,
-        # making it safe to call .get().
+        # `username` はユニークなカラムなので、username がすでに存在
+        # する場合、安全に .get() の呼び出しを行える。
         return User.get(User.username == username)
 
-You can easily encapsulate this type of logic as a ``classmethod`` on your own
-``Model`` classes.
+このような種類のロジックを、あなたの ``Model`` クラスの ``classmethod`` として、
+容易にカプセル化できます。
 
-The above example first attempts at creation, then falls back to retrieval,
-relying on the database to enforce a unique constraint. If you prefer to
-attempt to retrieve the record first, you can use
-:py:meth:`~Model.get_or_create`. This method is implemented along the same
-lines as the Django function of the same name. You can use the Django-style
-keyword argument filters to specify your ``WHERE`` conditions. The function
-returns a 2-tuple containing the instance and a boolean value indicating if the
-object was created.
+前述の例ではまず生成を試み、それが失敗したら取得へとフォールバックしますが、
+これはデータベースの unique 制約に依存します。もし、まずレコードの取得を
+試みたいという場合は :py:meth:`~Model.get_or_create` が使えます。この
+メソッドは Django の同名の関数と同じように実装されています。 フィルターとして
+``WHERE`` 条件を指定する場合も Django スタイルのキーワード引数が使えます。
+この関数は、インスタンス自身、およびオブジェクトが作られたかどうかを表す 
+boolean 値からなる２要素のタプルを返します。
 
-Here is how you might implement user account creation using
-:py:meth:`~Model.get_or_create`:
+:py:meth:`~Model.get_or_create` を使ってユーザーアカウントの作成処理を
+実装する方法は以下の通りです:
 
 .. code-block:: python
 
     user, created = User.get_or_create(username=username)
 
-Suppose we have a different model ``Person`` and would like to get or create a
-person object. The only conditions we care about when retrieving the ``Person``
-are their first and last names, **but** if we end up needing to create a new
-record, we will also specify their date-of-birth and favorite color:
+さて、ここで別の ``Person`` モデルがあり、これを使ってオブジェクトの取得または
+生成を行いたいとします。 ``Person`` の取得にあたって必要な条件は彼らの姓と名
+だけなのです **が、しかし** 新しいレコードを作る際には結局彼らの生年月日や
+好きな色なども指定することになります:
 
 .. code-block:: python
 
@@ -628,19 +630,19 @@ record, we will also specify their date-of-birth and favorite color:
         last_name=last_name,
         defaults={'dob': dob, 'favorite_color': 'green'})
 
-Any keyword argument passed to :py:meth:`~Model.get_or_create` will be used in
-the ``get()`` portion of the logic, except for the ``defaults`` dictionary,
-which will be used to populate values on newly-created instances.
+:py:meth:`~Model.get_or_create` に渡されたキーワード引数は、 ``defaults``
+辞書を除き、すべてロジックの ``get()`` 部分で使われます。 ``defaults``
+部分は新しく生成されたインスタンスで値を展開するのに使われます。
 
-For more details read the documentation for :py:meth:`Model.get_or_create`.
+詳細は :py:meth:`Model.get_or_create` のドキュメントを参照してください。
 
 複数レコードの select
 --------------------------
 
-We can use :py:meth:`Model.select` to retrieve rows from the table. When you
-construct a *SELECT* query, the database will return any rows that correspond
-to your query. Peewee allows you to iterate over these rows, as well as use
-indexing and slicing operations:
+:py:meth:`Model.select` を使ってテーブルから行を取り出せます。 *SELECT* 
+クエリーを構築する際、データベースはあなたのクエリーに該当する行を返します。
+Peewee ではインデックスやスライス操作を使うだけでなく、これらの行からの
+イテレートもできます:
 
 .. code-block:: pycon
 
@@ -657,12 +659,12 @@ indexing and slicing operations:
     >>> query[:2]
     [<__main__.User at 0x7f83e80f53a8>, <__main__.User at 0x7f83e80f5550>]
 
-:py:class:`Select` queries are smart, in that you can iterate, index and slice
-the query multiple times but the query is only executed once.
+:py:class:`Select` クエリーは賢いので、この中でイテレートやインデックスによる
+アクセスやスライスを何度行っても、実際にクエリーが実行されるのは一度だけです。
 
-In the following example, we will simply call :py:meth:`~Model.select` and
-iterate over the return value, which is an instance of :py:class:`Select`.
-This will return all the rows in the *User* table:
+以下の例では単に :py:meth:`~Model.select` へのコールを行い、その戻り値である
+:py:class:`Select` のインスタンスに対してイテレートを行います。これは *User*
+テーブルの中のすべての行を返します:
 
 .. code-block:: pycon
 
@@ -674,30 +676,31 @@ This will return all the rows in the *User* table:
     Peewee
 
 .. note::
-    Subsequent iterations of the same query will not hit the database as the
-    results are cached. To disable this behavior (to reduce memory usage), call
-    :py:meth:`Select.iterator` when iterating.
+    同一クエリーに対する後続のイテレートは、クエリーの結果がキャッシュされて
+    いるためデータベースにはヒットしません。この振る舞いを無効にする（メモリ
+    の使用量を減らす）には、イテレートの際に :py:meth:`Select.iterator` を
+    コールしてください。
 
-When iterating over a model that contains a foreign key, be careful with the
-way you access values on related models. Accidentally resolving a foreign key
-or iterating over a back-reference can cause :ref:`N+1 query behavior <nplusone>`.
+外部キーを持つモデルに対してイテレートする場合、関連するモデルの値へのアクセス
+には注意してください。外部キーまたは後方参照に対するイテレートは、意図しない
+:ref:`N+1 query behavior <nplusone>` を起こす恐れがあります。
 
-When you create a foreign key, such as ``Tweet.user``, you can use the
-*backref* to create a back-reference (``User.tweets``). Back-references
-are exposed as :py:class:`Select` instances:
+``Tweet.user`` のような外部キーを作成する場合、 *backref* を使って
+(``User.tweets``) という後方参照を作成できます。後方参照は :py:class:`Select`
+インスタンスとして露出されます:
 
 .. code-block:: pycon
 
     >>> tweet = Tweet.get()
-    >>> tweet.user  # Accessing a foreign key returns the related model.
+    >>> tweet.user  # 関連するモデルを返すような外部キーへのアクセス
     <tw.User at 0x7f3ceb017f50>
 
     >>> user = User.get()
-    >>> user.tweets  # Accessing a back-reference returns a query.
+    >>> user.tweets  # クエリーを返す後方参照へのアクセス
     <peewee.ModelSelect at 0x7f73db3bafd0>
 
-You can iterate over the ``user.tweets`` back-reference just like any other
-:py:class:`Select`:
+他の :py:class:`Select` と同様に、``user.tweets`` 後方参照を通したイテレートが
+可能です:
 
 .. code-block:: pycon
 
@@ -708,9 +711,9 @@ You can iterate over the ``user.tweets`` back-reference just like any other
     this is fun
     look at this picture of my food
 
-In addition to returning model instances, :py:class:`Select` queries can return
-dictionaries, tuples and namedtuples. Depending on your use-case, you may find
-it easier to work with rows as dictionaries, for example:
+モデルインスタンスを返すだけでなく、 :py:class:`Select` クエリーは辞書やタプル、
+および名前付きタプルを返すことが可能です。ご自分のユースケースにもよりますが、
+行を辞書として扱うほうが簡単な場合もあります。以下に例を示します:
 
 .. code-block:: pycon
 
@@ -722,8 +725,8 @@ it easier to work with rows as dictionaries, for example:
     {'id': 2, 'username': 'Huey'}
     {'id': 3, 'username': 'Peewee'}
 
-See :py:meth:`~BaseQuery.namedtuples`, :py:meth:`~BaseQuery.tuples`,
-:py:meth:`~BaseQuery.dicts` for more information.
+詳細は :py:meth:`~BaseQuery.namedtuples`, :py:meth:`~BaseQuery.tuples`,
+:py:meth:`~BaseQuery.dicts` を参照してください。
 
 巨大な結果セットをイテレートする
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

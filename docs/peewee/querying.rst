@@ -778,16 +778,16 @@ Peewee ではインデックスやスライス操作を使うだけでなく、�
     for stat_tuple in stats.tuples().iterator():
         serializer.serialize_tuple(stat_tuple)
 
-When iterating over a large number of rows that contain columns from multiple
-tables, peewee will reconstruct the model graph for each row returned. This
-operation can be slow for complex graphs. For example, if we were selecting a
-list of tweets along with the username and avatar of the tweet's author, Peewee
-would have to create two objects for each row (a tweet and a user). In addition
-to the above row-types, there is a fourth method :py:meth:`~BaseQuery.objects`
-which will return the rows as model instances, but will not attempt to resolve
-the model graph.
+複数のテーブルから取り出したカラムからなる大量の行に対するイテレートをする場合、
+peewee は返されるそれぞれの行を表すモデルのグラフを再構築します。この操作は、
+複雑なグラフに対しては遅くなる場合があります。たとえば、ツイートの一覧に加えて
+それらツイートの所有者のユーザ名やアバターを合わせて select していた場合、
+Peewee はそれぞれの行（ツイートとユーザ）に関する２つのオブジェクトを生成
+する必要があるかもしれません。前述の行の型に加え、 :py:meth:`~BaseQuery.objects`
+という第４のメソッドがあります。これは行をモデルインスタンスとして返しますが、
+そのモデルグラフを解決しようとはしません。
 
-For example:
+例を示します:
 
 .. code-block:: python
 
@@ -795,20 +795,20 @@ For example:
              .select(Tweet, User)  # Select tweet and user data.
              .join(User))
 
-    # Note that the user columns are stored in a separate User instance
-    # accessible at tweet.user:
+    # user のカラムは個別の User インスタンスに格納され、tweet.user として
+    # アクセスできることに注意してください:
     for tweet in query:
         print(tweet.user.username, tweet.content)
 
-    # Using ".objects()" will not create the tweet.user object and assigns all
-    # user attributes to the tweet instance:
+    # ".objects()" を使った場合は tweet.user オブジェクトを生成せず、
+    # すべての user の属性を tweet インスタンスに割り当てます:
     for tweet in query.objects():
         print(tweet.username, tweet.content)
 
-For maximum performance, you can execute queries and then iterate over the
-results using the underlying database cursor. :py:meth:`Database.execute`
-accepts a query object, executes the query, and returns a DB-API 2.0 ``Cursor``
-object. The cursor will return the raw row-tuples:
+最大のパフォーマンスを得るために、クエリーを実行してその結果をイテレートする際に、
+下層のデータベースのカーソルを使うことができます。:py:meth:`Database.execute`
+はクエリーオブジェクトを受け取ってクエリーを実行し、 DB-API 2.0 の ``Cursor``
+オブジェクトを返します。このカーソルは生の行タプルを返します:
 
 .. code-block:: python
 
@@ -820,8 +820,8 @@ object. The cursor will return the raw row-tuples:
 レコードのフィルタリング
 --------------------------
 
-You can filter for particular records using normal python operators. Peewee
-supports a wide variety of :ref:`query operators <query-operators>`.
+python の通常の演算子を使って特定のレコードをフィルターできます。Peewee は 
+:ref:`query operators <query-operators>` の広範囲な種類をサポートしています。
 
 .. code-block:: pycon
 
@@ -837,7 +837,7 @@ supports a wide variety of :ref:`query operators <query-operators>`.
     ...
     Really old tweet 2010-01-01 00:00:00
 
-You can also filter across joins:
+join をまたぐようなフィルターも可能です:
 
 .. code-block:: pycon
 
@@ -847,8 +847,8 @@ You can also filter across joins:
     this is fun
     look at this picture of my food
 
-If you want to express a complex query, use parentheses and python's bitwise
-*or* and *and* operators:
+複雑なクエリーを表現したい場合、括弧と python のビットごとの *or* や *and* 演算子を
+使います:
 
 .. code-block:: pycon
 
@@ -857,69 +857,68 @@ If you want to express a complex query, use parentheses and python's bitwise
     ...     (User.username == 'Peewee Herman'))
 
 .. note::
-    Note that Peewee uses **bitwise** operators (``&`` and ``|``) rather than
-    logical operators (``and`` and ``or``). The reason for this is that Python
-    coerces the return value of logical operations to a boolean value. This is
-    also the reason why "IN" queries must be expressed using ``.in_()`` rather
-    than the ``in`` operator.
+    Peewee は論理演算子（``and`` と ``or``）ではなく **ビットごとの** 演算子
+    （ ``&`` と ``|``）を使うことに注意してください。この理由は、python は論理
+    演算子の戻り値をブール値に変換してしまうためです。またこれは、"IN" クエリーが
+    ``in`` 演算子ではなく ``.in_()`` を使って表現しなければならない理由でもあります。
 
-Check out :ref:`the table of query operations <query-operators>` to see what
-types of queries are possible.
+どんなタイプのクエリーが使えるのかは :ref:`the table of query operations <query-operators>`
+で調べてみてください。
 
 .. note::
 
-    A lot of fun things can go in the where clause of a query, such as:
+    クエリー中の where 句では、以下のようなおもしろい表現がたくさんあります:
 
-    * A field expression, e.g. ``User.username == 'Charlie'``
-    * A function expression, e.g. ``fn.Lower(fn.Substr(User.username, 1, 1)) == 'a'``
-    * A comparison of one column to another, e.g. ``Employee.salary < (Employee.tenure * 1000) + 40000``
+    * フィールド表現。たとえば ``User.username == 'Charlie'``
+    * 関数表現。たとえば ``fn.Lower(fn.Substr(User.username, 1, 1)) == 'a'``
+    * カラム間の比較。たとえば ``Employee.salary < (Employee.tenure * 1000) + 40000``
 
-    You can also nest queries, for example tweets by users whose username
-    starts with "a":
+    たとえば username が "a" で始まるユーザのツイートなど、クエリーを入れ子にしても
+    構いません:
 
     .. code-block:: python
 
-        # get users whose username starts with "a"
+        # username が "a" で始まるユーザ一覧を取得する
         a_users = User.select().where(fn.Lower(fn.Substr(User.username, 1, 1)) == 'a')
 
-        # the ".in_()" method signifies an "IN" query
+        # "IN" クエリーを意味する ".in_()" メソッド
         a_user_tweets = Tweet.select().where(Tweet.user.in_(a_users))
 
 さらなるクエリーの例
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
-    For a wide range of example queries, see the :ref:`Query Examples <query_examples>`
-    document, which shows how to implements queries from the `PostgreSQL Exercises <https://pgexercises.com/>`_
-    website.
+    サンプルとなるクエリーに関する広範な例については :ref:`Query Examples <query_examples>`
+    ドキュメントを参照してください。これには `PostgreSQL Exercises <https://pgexercises.com/>`_
+    web サイトにあるクエリーの実装方法について述べられています。
 
-Get active users:
+アクティブなユーザを取得する:
 
 .. code-block:: python
 
     User.select().where(User.active == True)
 
-Get users who are either staff or superusers:
+スタッフもしくはスーパーユーザであるユーザを取得する:
 
 .. code-block:: python
 
     User.select().where(
         (User.is_staff == True) | (User.is_superuser == True))
 
-Get tweets by user named "charlie":
+名前が "charlie" であるユーザのツイートを取得する:
 
 .. code-block:: python
 
     Tweet.select().join(User).where(User.username == 'charlie')
 
-Get tweets by staff or superusers (assumes FK relationship):
+スタッフもしくはスーパーユーザのツイートを取得する（外部キーが張られていることが前提）:
 
 .. code-block:: python
 
     Tweet.select().join(User).where(
         (User.is_staff == True) | (User.is_superuser == True))
 
-Get tweets by staff or superusers using a subquery:
+スタッフもしくはスーパーユーザのツイートを、サブクエリーを使って取得する:
 
 .. code-block:: python
 
@@ -930,7 +929,7 @@ Get tweets by staff or superusers using a subquery:
 レコードのソート
 -------------------
 
-To return rows in order, use the :py:meth:`~Query.order_by` method:
+行を並べて返したい場合は :py:meth:`~Query.order_by` メソッドを使います:
 
 .. code-block:: pycon
 
@@ -948,21 +947,21 @@ To return rows in order, use the :py:meth:`~Query.order_by` method:
     2011-06-07 14:08:48
     2010-01-01 00:00:00
 
-You can also use ``+`` and ``-`` prefix operators to indicate ordering:
+並べ替えを指示するために ``+`` と ``-`` プリフィックスを使うこともできます:
 
 .. code-block:: python
 
-    # The following queries are equivalent:
+    # 以下のクエリーは同値です:
     Tweet.select().order_by(Tweet.created_date.desc())
 
-    Tweet.select().order_by(-Tweet.created_date)  # Note the "-" prefix.
+    Tweet.select().order_by(-Tweet.created_date)  # "-" プリフィックスに注意.
 
-    # Similarly you can use "+" to indicate ascending order, though ascending
-    # is the default when no ordering is otherwise specified.
+    # 同様に "+" を昇順という意味で使うことが可能ですが、順序を指定しない場合も
+    デフォルトは昇順となります。
     User.select().order_by(+User.username)
 
-You can also order across joins. Assuming you want to order tweets by the
-username of the author, then by created_date:
+join をまたいだソートを指定することも可能です。たとえば著者のユーザ名と作成日で
+ソートさせたい場合は以下のようになります:
 
 .. code-block:: pycon
 

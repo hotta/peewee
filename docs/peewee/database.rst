@@ -1,7 +1,7 @@
 .. _database:
 
-Database
-========
+データベース（まだ途中）
+===============================================
 
 The Peewee :py:class:`Database` object represents a connection to a database.
 The :py:class:`Database` class is instantiated with all the information needed
@@ -65,8 +65,8 @@ For more information on database extensions, see:
 * :ref:`apsw`
 * :ref:`sqliteq`
 
-Initializing a Database
------------------------
+データベースを初期化する
+-------------------------------------
 
 The :py:class:`Database` initialization method expects the name of the database
 as the first parameter. Subsequent keyword arguments are passed to the
@@ -104,8 +104,8 @@ Consult your database driver's documentation for the available parameters:
 
 .. _using_postgresql:
 
-Using Postgresql
-----------------
+Postgresql を使う場合
+---------------------
 
 To connect to a Postgresql database, we will use
 :py:class:`PostgresqlDatabase`. The first parameter is always the name of the
@@ -143,7 +143,7 @@ If you would like to use these awesome features, use the
     psql_db = PostgresqlExtDatabase('my_database', user='postgres')
 
 
-Isolation level
+隔離レベル
 ^^^^^^^^^^^^^^^
 
 As of Peewee 3.9.7, the isolation level can be specified as an initialization
@@ -181,8 +181,8 @@ parameter, using the symbolic constants in ``psycopg2.extensions``:
 
 .. _using_crdb:
 
-Using CockroachDB
------------------
+CockroachDB を使う
+--------------------------------
 
 Connect to CockroachDB (CRDB) using the :py:class:`CockroachDatabase` database
 class, defined in ``playhouse.cockroachdb``:
@@ -226,8 +226,8 @@ For more information, see:
 
 .. _using_sqlite:
 
-Using SQLite
-------------
+SQLite を使う
+-----------------------
 
 To connect to a SQLite database, we will use :py:class:`SqliteDatabase`. The
 first parameter is the filename containing the database, or the string
@@ -265,8 +265,8 @@ the ``playhouse.sqlite_ext`` module:
 
 .. _sqlite-pragma:
 
-PRAGMA statements
-^^^^^^^^^^^^^^^^^
+PRAGMA ステートメント
+^^^^^^^^^^^^^^^^^^^^^
 
 SQLite allows run-time configuration of a number of parameters through
 ``PRAGMA`` statements (`SQLite documentation <https://www.sqlite.org/pragma.html>`_).
@@ -314,14 +314,14 @@ the :py:class:`SqliteDatabase` object:
     A full list of PRAGMA settings, their meaning and accepted values can be
     found in the SQLite documentation: http://sqlite.org/pragma.html
 
-Recommended Settings
+推奨設定
 ^^^^^^^^^^^^^^^^^^^^
 
 The following settings are what I use with SQLite for a typical web
 application database.
 
 ========================= =================== ===============================================
-pragma                    recommended setting explanation
+プラグマ                   推奨設定            説明
 ========================= =================== ===============================================
 journal_mode              wal                 allow readers and writers to co-exist
 cache_size                -1 * data_size_kb   set page-cache size in KiB, e.g. -32000 = 32MB
@@ -343,7 +343,7 @@ Example database using the above options:
 
 .. _sqlite-user-functions:
 
-User-defined functions
+ユーザー定義関数
 ^^^^^^^^^^^^^^^^^^^^^^
 
 SQLite can be extended with user-defined Python code. The
@@ -477,8 +477,8 @@ For more information, see:
 
 .. _sqlite-locking:
 
-Set locking mode for transaction
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+トランザクションのロックモード設定
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 SQLite transactions can be opened in three different modes:
 
@@ -515,8 +515,8 @@ For more information, see the SQLite `locking documentation <https://sqlite.org/
 To learn more about transactions in Peewee, see the :ref:`transactions`
 documentation.
 
-APSW, an Advanced SQLite Driver
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+APSW, 先進的な SQLite ドライバー
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Peewee also comes with an alternate SQLite database that uses :ref:`apsw`, an
 advanced Python SQLite driver. More information on APSW can be obtained on the
@@ -541,8 +541,8 @@ If you would like to use APSW, use the :py:class:`APSWDatabase` from the
 
 .. _using_mysql:
 
-Using MySQL
------------
+MySQL を使う
+------------
 
 To connect to a MySQL database, we will use :py:class:`MySQLDatabase`. After
 the database name, you can specify arbitrary connection parameters that will be
@@ -578,7 +578,7 @@ comes in, and close the connection when you return a response.
 See the :ref:`framework-integration` section for examples of configuring common
 web frameworks to manage database connections.
 
-Connecting using a Database URL
+データベース URL を使った接続
 -------------------------------
 
 The playhouse module :ref:`db_url` provides a helper :py:func:`connect`
@@ -612,7 +612,7 @@ Example database URLs:
 
 .. _deferring_initialization:
 
-Run-time database configuration
+実行時のデータベース設定
 -------------------------------
 
 Sometimes the database connection settings are not known until run-time, when
@@ -649,7 +649,7 @@ For even more control over initializing your database, see the next section,
 
 .. _dynamic_db:
 
-Dynamically defining a database
+データベースの動的定義
 -------------------------------
 
 For even more control over how your database is defined/initialized, you can
@@ -698,7 +698,7 @@ the app is configured:
 
 .. _binding_database:
 
-Setting the database at run-time
+実行時にデータベースを設定する
 --------------------------------
 
 We have seen three ways that databases can be configured with Peewee:
@@ -787,7 +787,7 @@ for binding a given model class:
 The :ref:`testing` section of this document also contains some examples of
 using the ``bind()`` methods.
 
-Connection Management
+接続管理
 ---------------------
 
 To open a connection to a database, use the :py:meth:`Database.connect` method:
@@ -852,8 +852,8 @@ You can test whether the database is closed using the
     >>> db.is_closed()
     True
 
-Using autoconnect
-^^^^^^^^^^^^^^^^^
+autoconnect を使う
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It is not necessary to explicitly connect to the database before using
 it if the database is initialized with ``autoconnect=True`` (the default).
@@ -873,7 +873,7 @@ For the best guarantee of correctness, disable ``autoconnect``:
 
     db = PostgresqlDatabase('my_app', user='postgres', autoconnect=False)
 
-Thread Safety
+スレッド安全
 ^^^^^^^^^^^^^
 
 Peewee keeps track of the connection state using thread-local storage, making
@@ -881,8 +881,8 @@ the Peewee :py:class:`Database` object safe to use with multiple threads. Each
 thread will have it's own connection, and as a result any given thread will
 only have a single connection open at a given time.
 
-Context managers
-^^^^^^^^^^^^^^^^
+コンテキストマネージャー
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The database object itself can be used as a context-manager, which opens a
 connection for the duration of the wrapped block of code. Additionally, a
@@ -925,7 +925,7 @@ The ``connection_context()`` method can also be used as a decorator:
         load_fixture_data(db)
 
 
-DB-API Connection Object
+DB-API 接続オブジェクト
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 To obtain a reference to the underlying DB-API 2.0 connection, use the
@@ -940,8 +940,8 @@ connection.
 
 .. _connection_pooling:
 
-Connection Pooling
-------------------
+コネクションプーリング
+-------------------------------------
 
 Connection pooling is provided by the :ref:`pool module <pool>`, included in
 the :ref:`playhouse <playhouse>` extensions library. The pool supports:
@@ -976,32 +976,30 @@ section of the :ref:`playhouse <playhouse>` documentation.
 
 .. _testing:
 
-Testing Peewee Applications
----------------------------
+Peewee アプリケーションのテスト
+-----------------------------------------------
 
-When writing tests for an application that uses Peewee, it may be desirable to
-use a special database for tests. Another common practice is to run tests
-against a clean database, which means ensuring tables are empty at the start of
-each test.
+Peewee を使ったアプリケーションのテストを書く場合、テスト用の特別なデータベースを
+使いたいという希望があるかもしれません。またよくあるケースとしては、クリーンな
+データベースに対してテストを行い、それぞれのテスト開始時にはテーブルに一切データが
+入っていないようにしたいうというケースです。
 
-To bind your models to a database at run-time, you can use the following
-methods:
+あなたのモデルを実行時にデータベースにバインドするには、以下のメソッドを使います:
 
-* :py:meth:`Database.bind_ctx`, which returns a context-manager that will bind
-  the given models to the database instance for the duration of the wrapped
-  block.
-* :py:meth:`Model.bind_ctx`, which likewise returns a context-manager that
-  binds the model (and optionally its dependencies) to the given database for
-  the duration of the wrapped block.
-* :py:meth:`Database.bind`, which is a one-time operation that binds the models
-  (and optionally its dependencies) to the given database.
-* :py:meth:`Model.bind`, which is a one-time operation that binds the model
-  (and optionally its dependencies) to the given database.
+* :py:meth:`Database.bind_ctx` : 囲まれたブロックにいる間のみ指定されたモデルを
+  データベースインスタンスにバインドするような、コンテキストマネージャーを返します。
+* :py:meth:`Model.bind_ctx` :  同様に、囲まれたブロックにいる間のみ指定された
+  モデル（および、オプションでそれに依存するモデルも）をデータベースインスタンスに
+  バインドするような、コンテキストマネージャーを返します。
+* :py:meth:`Database.bind` : 指定されたモデル（および、オプションでそれに依存する
+  モデルも）をデータベースインスタンスにバインドする、１回の操作です。
+* :py:meth:`Model.bind` : 指定されたモデル（および、オプションでそれに依存する
+  モデルも）をデータベースインスタンスにバインドする、１回の操作です。
 
-Depending on your use-case, one of these options may make more sense. For the
-examples below, I will use :py:meth:`Model.bind`.
+あなたのユースケースにより、これらのいずれか一つを選択してください。以下の例では
+:py:meth:`Model.bind` を使います。
 
-Example test-case setup:
+テストケースのセットアップの例:
 
 .. code-block:: python
 
@@ -1011,39 +1009,38 @@ Example test-case setup:
 
     MODELS = [User, Tweet, EventLog, Relationship]
 
-    # use an in-memory SQLite for tests.
+    # テストではインメモリの SQLite を使います
     test_db = SqliteDatabase(':memory:')
 
     class BaseTestCase(unittest.TestCase):
         def setUp(self):
-            # Bind model classes to test db. Since we have a complete list of
-            # all models, we do not need to recursively bind dependencies.
+            # モデルクラスをテストDBにバインドします。事前に全モデルの完全な一覧を
+            # 指定しているので、bind を再帰的に適用する必要はありません。
             test_db.bind(MODELS, bind_refs=False, bind_backrefs=False)
 
             test_db.connect()
             test_db.create_tables(MODELS)
 
         def tearDown(self):
-            # Not strictly necessary since SQLite in-memory databases only live
-            # for the duration of the connection, and in the next step we close
-            # the connection...but a good practice all the same.
+            # SQLite のインメモリデータベースの場合、接続が確立している間だけしか
+            # データが存在しないため、ここは厳密には不要です。次のステップでは接続を
+            # クローズします... しかし、これは優れた実践と言えます。
             test_db.drop_tables(MODELS)
 
-            # Close connection to db.
+            # DBへの接続をクローズします.
             test_db.close()
 
-            # If we wanted, we could re-bind the models to their original
-            # database here. But for tests this is probably not necessary.
+            # 希望する場合、ここでモデルをオリジナルのデータベースにバインドする
+            # こともできます。ただしテストの場合はおそらく不要なはずです。
 
-As an aside, and speaking from experience, I recommend testing your application
-using the same database backend you use in production, so as to avoid any
-potential compatibility issues.
+ここで、経験的には、本番環境でアプリケーションのテストをする場合、互換性の問題を
+起こさないようにするため本番と同じバックエンドデータベースを使うべきでしょう。
 
 If you'd like to see some more examples of how to run tests using Peewee, check
 out Peewee's own `test-suite <https://github.com/coleifer/peewee/tree/master/tests>`_.
 
-Async with Gevent
------------------
+Gevent による非同期処理
+-----------------------
 
 `gevent <http://www.gevent.org/>`_ is recommended for doing asynchronous I/O
 with Postgresql or MySQL. Reasons I prefer gevent:
@@ -1094,8 +1091,8 @@ no effect one way or the other on SQLite databases.
 
 .. _framework-integration:
 
-Framework Integration
----------------------
+フレームワークへの融合
+----------------------------------------
 
 For web applications, it is common to open a connection when a request is
 received, and to close the connection when the response is delivered. In this
@@ -1420,14 +1417,14 @@ then close it when the response is returned.
             db.close()
 
 
-Other frameworks
-^^^^^^^^^^^^^^^^
+その他のフレームワーク
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Don't see your framework here? Please `open a GitHub ticket
 <https://github.com/coleifer/peewee/issues/new>`_ and I'll see about adding a
 section, or better yet, submit a documentation pull-request.
 
-Executing Queries
+クエリーの実行
 -----------------
 
 SQL queries will typically be executed by calling ``execute()`` on a query
@@ -1451,7 +1448,7 @@ execute SQL directly, you can use the :py:meth:`Database.execute_sql` method.
 
 .. _transactions:
 
-Managing Transactions
+トランザクション管理
 ---------------------
 
 Peewee provides several interfaces for working with transactions. The most
@@ -1491,8 +1488,8 @@ the wrapped block.
     :py:meth:`~Database.atomic` can be used as either a **context manager** or
     a **decorator**.
 
-Context manager
-^^^^^^^^^^^^^^^
+コンテキストマネージャー
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Using ``atomic`` as context manager:
 
@@ -1529,8 +1526,8 @@ well:
     except peewee.IntegrityError:
         return 'Failure: %s is already in use.' % username
 
-Decorator
-^^^^^^^^^
+デコレーター
+^^^^^^^^^^^^
 
 Using ``atomic`` as a decorator:
 
@@ -1544,8 +1541,8 @@ Using ``atomic`` as a decorator:
 
     create_user('charlie')
 
-Nesting Transactions
-^^^^^^^^^^^^^^^^^^^^
+ネストしたトランザクション
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :py:meth:`~Database.atomic` provides transparent nesting of transactions. When
 using :py:meth:`~Database.atomic`, the outer-most call will be wrapped in a
@@ -1562,8 +1559,8 @@ transaction, and any nested calls will use savepoints.
 Peewee supports nested transactions through the use of savepoints (for more
 information, see :py:meth:`~Database.savepoint`).
 
-Explicit transaction
-^^^^^^^^^^^^^^^^^^^^
+明示的なトランザクション
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you wish to explicitly run code in a transaction, you can use
 :py:meth:`~Database.transaction`. Like :py:meth:`~Database.atomic`,
@@ -1611,8 +1608,8 @@ block. When this happens, a new transaction will be started.
     this can lead to unpredictable behavior, so it is strongly recommended that
     you use :py:meth:`~Database.atomic`.
 
-Explicit Savepoints
-^^^^^^^^^^^^^^^^^^^
+明示的なセーブポイント
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Just as you can explicitly create transactions, you can also explicitly create
 savepoints using the :py:meth:`~Database.savepoint` method. Savepoints must
@@ -1634,8 +1631,8 @@ occur within a transaction, but can be nested arbitrarily deep.
     :py:class:`transaction`, which will automatically open a new transaction
     after manual commit/rollback.
 
-Autocommit Mode
-^^^^^^^^^^^^^^^
+Autocommit モード
+^^^^^^^^^^^^^^^^^
 
 By default, Peewee operates in *autocommit mode*, such that any statements
 executed outside of a transaction are run in their own transaction. To group
@@ -1668,8 +1665,8 @@ Again -- I don't anticipate anyone needing this, but it's here just in case.
 
 .. _database-errors:
 
-Database Errors
----------------
+データベースのエラー
+-------------------------------
 
 The Python DB-API 2.0 spec describes `several types of exceptions <https://www.python.org/dev/peps/pep-0249/#exceptions>`_. Because most database drivers have their own implementations of these exceptions, Peewee simplifies things by providing its own wrappers around any implementation-specific exception classes. That way, you don't need to worry about importing any special exception classes, you can just use the ones from peewee:
 
@@ -1684,8 +1681,8 @@ The Python DB-API 2.0 spec describes `several types of exceptions <https://www.p
 
 .. note:: All of these error classes extend ``PeeweeException``.
 
-Logging queries
----------------
+クエリーのロギング
+----------------------------------
 
 All queries are logged to the *peewee* namespace using the standard library
 ``logging`` module. Queries are logged using the *DEBUG* level.  If you're
@@ -1700,8 +1697,8 @@ handler.
     logger.addHandler(logging.StreamHandler())
     logger.setLevel(logging.DEBUG)
 
-Adding a new Database Driver
-----------------------------
+新しいデータベースドライバーを追加する
+--------------------------------------------------------
 
 Peewee comes with built-in support for Postgres, MySQL and SQLite. These
 databases are very popular and run the gamut from fast, embeddable databases to

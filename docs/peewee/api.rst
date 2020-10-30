@@ -3804,21 +3804,22 @@ Model
 
 .. py:class:: Model(**kwargs)
 
-    :param kwargs: Mapping of field-name to value to initialize model with.
+    :param kwargs: モデルを初期化するための、フィールドから値へのマッピング。
 
-    Model class provides a high-level abstraction for working with database
-    tables. Models are a one-to-one mapping with a database table (or a
-    table-like object, such as a view). Subclasses of ``Model`` declare any
-    number of :py:class:`Field` instances as class attributes. These fields
-    correspond to columns on the table.
+    Model クラスはデータベーステーブルを扱うための、高レベルの抽象化を提供
+    します。モデルはデータベーステーブル（もしくはビューを始めとするテーブル
+    類似オブジェクト）に対して１対１となるマッピングです。 ``Model`` の
+    サブクラスでは、クラスの属性として任意の数の :py:class:`Field` 
+    インスタンスを宣言できます。これらのフィールドはテーブルのカラムに対応
+    します。
 
-    Table-level operations, such as :py:meth:`~Model.select`,
-    :py:meth:`~Model.update`, :py:meth:`~Model.insert` and
-    :py:meth:`~Model.delete` are implemented as classmethods. Row-level
-    operations, such as :py:meth:`~Model.save` and
-    :py:meth:`~Model.delete_instance` are implemented as instancemethods.
+    :py:meth:`~Model.select`, :py:meth:`~Model.update`, 
+    :py:meth:`~Model.insert`, :py:meth:`~Model.delete` といったテーブルレベル
+    の操作はクラスメソッドとして実装されています。 :py:meth:`~Model.save`, 
+    :py:meth:`~Model.delete_instance` といった行レベルの操作はインスタンス
+    メソッドとして実装されています。
 
-    Example:
+    例:
 
     .. code-block:: python
 
@@ -3834,14 +3835,14 @@ Model
 
     .. py:classmethod:: alias([alias=None])
 
-        :param str alias: Optional name for alias.
-        :returns: :py:class:`ModelAlias` instance.
+        :param str alias: エイリアスで使うオプションの別名.
+        :returns: :py:class:`ModelAlias` インスタンス.
 
-        Create an alias to the model-class. Model aliases allow you to
-        reference the same :py:class:`Model` multiple times in a query, for
-        example when doing a self-join or sub-query.
+        モデルクラスのエイリアス（別名）を作成します。モデルエイリアスを
+        使うと、たとえば自己 JOIN やサブクエリーの時に、一つのクエリーの
+        中で同じ :py:class:`Model` を複数回参照できます。
 
-        Example:
+        例:
 
         .. code-block:: python
 
@@ -3853,26 +3854,25 @@ Model
 
     .. py:classmethod:: select(*fields)
 
-        :param fields: A list of model classes, field instances, functions or
-            expressions. If no arguments are provided, all columns for the
-            given model will be selected by default.
-        :returns: :py:class:`ModelSelect` query.
+        :param fields: モデルクラス、フィールドインスタンス、関数または
+            評価式のリスト。引数を指定しなかった場合、デフォルトではその
+            モデルで定義されたすべてのカラムが返されます。
+        :returns: :py:class:`ModelSelect` クエリー.
 
-        Create a SELECT query. If no fields are explicitly provided, the query
-        will by default SELECT all the fields defined on the model, unless you
-        are using the query as a sub-query, in which case only the primary key
-        will be selected by default.
+        SELECT クエリーを作成します。フィールドを明示しない場合、デフォルト
+        ではそのモデルで定義されたすべてのフィールドを SELECT します。
+        例外はクエリーをサブクエリーとして使っているケースで、この場合
+        デフォルトではプライマリキーのみが取り出されます。
 
-        Example of selecting all columns:
+        すべてのカラムを select する例:
 
         .. code-block:: python
 
             query = User.select().where(User.active == True).order_by(User.username)
 
-        Example of selecting all columns on *Tweet* and the parent model,
-        *User*. When the ``user`` foreign key is accessed on a *Tweet*
-        instance no additional query will be needed (see :ref:`N+1 <nplusone>`
-        for more details):
+        *Tweet* とその親モデルである *User* のすべてのカラムを select する例。
+        ``user`` の外部キーが *Tweet* インスタンス上でアクセスされる場合、
+        追加のクエリーは必要ありません（詳細は :ref:`N+1 <nplusone>` を参照）:
 
         .. code-block:: python
 
@@ -3884,45 +3884,45 @@ Model
             for tweet in query:
                 print(tweet.user.username, '->', tweet.content)
 
-        Example of subquery only selecting the primary key:
+        プライマリキーのみを select するサブクエリーの例:
 
         .. code-block:: python
 
             inactive_users = User.select().where(User.active == False)
 
-            # Here, instead of defaulting to all columns, Peewee will default
-            # to only selecting the primary key.
+            # ここで、すべてのカラムを select するというデフォルト動作の
+            # 代わりに、Peewee はデフォルトではプライマリキーのみを select
+            # します。
             Tweet.delete().where(Tweet.user.in_(inactive_users)).execute()
 
     .. py:classmethod:: update([__data=None[, **update]])
 
-        :param dict __data: ``dict`` of fields to values.
-        :param update: Field-name to value mapping.
+        :param dict __data: フィールドから値への ``dict`` .
+        :param update: フィールド名から値へのマッピング.
 
-        Create an UPDATE query.
+        UPDATE クエリーを作成します。
 
-        Example showing users being marked inactive if their registration has
-        expired:
+        以下の例では、登録処理が有効期限切れになっているユーザを無効として
+        マークしようとしています:
 
         .. code-block:: python
 
             q = (User
                  .update({User.active: False})
                  .where(User.registration_expired == True))
-            q.execute()  # Execute the query, returning number of rows updated.
+            q.execute()  # クエリーを実行し、変更された行数を返す.
 
-        Example showing an atomic update:
+        アトミックなアップデートの例:
 
         .. code-block:: python
 
             q = (PageView
                  .update({PageView.count: PageView.count + 1})
                  .where(PageView.url == url))
-            q.execute()  # Execute the query.
+            q.execute()  # クエリーを実行する.
 
         .. note::
-            When an update query is executed, the number of rows modified will
-            be returned.
+            update クエリーを実行すると、変更された行数が返されます。
 
     .. py:classmethod:: insert([__data=None[, **insert]])
 
@@ -4233,20 +4233,20 @@ Model
 
     .. py:classmethod:: get(*query, **filters)
 
-        :param query: Zero or more :py:class:`Expression` objects.
-        :param filters: Mapping of field-name to value for Django-style filter.
+        :param query: 一個以上の :py:class:`Expression` オブジェクト.
+        :param filters: Django-style フィルターに渡すためのフィールド名から値へのマッピング.
         :raises: :py:class:`DoesNotExist`
-        :returns: Model instance matching the specified filters.
+        :returns: 指定されたフィルタにマッチするモデルインスタンス.
 
-        Retrieve a single model instance matching the given filters. If no
-        model is returned, a :py:class:`DoesNotExist` is raised.
+        指定されたフィルタにマッチする単一のモデルインスタンスを返す。
+        モデルが返されない場合、 :py:class:`DoesNotExist` 例外が発生する。
 
         .. code-block:: python
 
             user = User.get(User.username == username, User.active == True)
 
-        This method is also exposed via the :py:class:`SelectQuery`, though it
-        takes no parameters:
+        このメソッドは :py:class:`SelectQuery` を通しても見えるようになるが、
+        この場合はパラメータを取らない:
 
         .. code-block:: python
 
@@ -4260,15 +4260,15 @@ Model
                 user = None
 
         .. note::
-            The :py:meth:`~Model.get` method is shorthand for selecting with a
-            limit of 1. It has the added behavior of raising an exception when
-            no matching row is found. If more than one row is found, the first
-            row returned by the database cursor will be used.
+            :py:meth:`~Model.get` メソッドは limit 1 で select するケースの
+            短縮形である。マッチする行がない場合は例外が発生する。２つ以上の
+            行にマッチした場合、データベースカーソルによりかえされた最初の
+            行が使われる。
 
     .. py:classmethod:: get_or_none(*query, **filters)
 
-        Identical to :py:meth:`Model.get` but returns ``None`` if no model
-        matches the given filters.
+        指定されたフィルタにマッチしない場合 ``None`` が返される以外は
+        :py:meth:`Model.get` と同じ。
 
     .. py:classmethod:: get_by_id(pk)
 

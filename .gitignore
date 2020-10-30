@@ -14,3 +14,6 @@ lsm.so
 regexp.so
 /env/
 .vscode
+docs/_build
+_build.orig/
+venv/

@@ -3,7 +3,7 @@
 クエリーの発行（まだ途中）
 ==========================
 
-この章では, リレーショナルデータベースに対して広く実行される, 基本的な CRUD 操作について述べます:
+この章では, リレーショナルデータベースに対して実行されることの多い, 基本的な CRUD 操作について述べます:
 
 * :py:meth:`Model.create`, *INSERT* クエリーの発行.
 * :py:meth:`Model.save` と :py:meth:`Model.update`,  *UPDATE* クエリーの発行.
@@ -19,7 +19,7 @@
 -------------------------
 
 :py:meth:`Model.create` を使って新しいモデルのインスタンスを作成できます.
-このメソッドはキーワード引数を受け取りますが, キーはモデルのフィールド名に対応しています.
+このメソッドはキーワード引数を受け取りますが, キーワードのキーはモデルのフィールド名に対応しています.
 新しいインスタンスが返され, テーブルに行が追加されます.
 
 .. code-block:: pycon
@@ -47,7 +47,7 @@
     >>> huey.id
     2
 
-モデルが外部キーを保つ場合は, 新しいレコードを作成する際に,
+モデルが外部キーを持つ場合, 新しいレコードを作成する際に,
 モデルインスタンスを外部キーフィールドに直接代入できます.
 
 .. code-block:: pycon
@@ -60,8 +60,7 @@
 
     >>> tweet = Tweet.create(user=2, message='Hello again!')
 
-もし単にデータを insert したいだけで, モデルインスタンスを作る必要がない場合,
- :py:meth:`Model.insert` が使えます:
+もし単にデータを insert したいだけで, モデルインスタンスを作る必要がない場合, :py:meth:`Model.insert` が使えます:
 
 .. code-block:: pycon
 
@@ -80,7 +79,7 @@ insert クエリーを実行した後, 新しい行のプライマリキーが�
 ------------
 
 たくさんのデータを素早くロードするための方法をいくつかご紹介します.
-バカ正直なアプローチとしては, 単にループの中で :py:meth:`Model.create` を呼ぶことです:
+素直過ぎるアプローチとしては, 単にループの中で :py:meth:`Model.create` を呼ぶことが挙げられます:
 
 
 .. code-block:: python
@@ -96,28 +95,22 @@ insert クエリーを実行した後, 新しい行のプライマリキーが�
 
 上記のアプローチは, いくつかの理由により遅くなります:
 
-1.  ループをトランザクションで囲んでいない場合, :py:meth:`~Model.create`
-    への呼び出しのたびにトランザクションが生成されます. これだと極端に遅くなります!
-2.  この方法だと, これに 適合する Python のロジックがたくさんあるのですが, それぞれに対して
-    :py:class:`InsertQuery` を生成し, それらが SQL にパースされる必要があります.
-3.  このため, データベースに対して(SQL の生のバイトストリームという意味で)
-    パース対象となる大量のデータを送りつけることになります.
-4.  私達は *last insert id* を取り出しますが, 
-    このために追加のクエリーを発行しなければならないケースがあります.
+1. ループをトランザクションで囲んでいない場合, :py:meth:`~Model.create` への呼び出しのたびにトランザクションが生成されます. これは極端に遅くなってしまいます!
+2. このやり方の場合, これに合った Python のロジックがたくさんあります。これはそれらそれぞれに対して :py:class:`InsertQuery` を生成し, それらが SQL にパースされる必要があります.
+3. このため, データベースに対して（SQL の生のバイトストリームという意味で）パース対象となる大量のデータを送りつけることになります.
+4. 私達は *last insert id* を取り出しますが, このために追加のクエリーを発行しなければならないケースがあります.
 
-これを :py:meth:`~Database.atomic` を使ってトランザクションで囲むだけで, 劇的に速くなります.
+これを単に :py:meth:`~Database.atomic` を使ってトランザクションで囲むだけで, 劇的に速くなります.
 
 
 .. code-block:: python
 
-    # この方が速くなる.
+    # この方が速くなります.
     with db.atomic():
         for data_dict in data_source:
             MyModel.create(**data_dict)
 
-上記のコードでは, まだ 2,3,4 の弱点があります. :py:meth:`~Model.insert_many` 
-を使うと, さらに爆速になります. このメソッドはリストまたは辞書を受け取り,
-1回の単独クエリーで複数の行を insert します.
+上記のコードでは, まだ 2,3,4 の弱点があります. :py:meth:`~Model.insert_many` を使うとさらに爆速になります. このメソッドはリストまたは辞書を受け取り, 1回の単独クエリーで複数の行を insert します.
 
 .. code-block:: python
 
@@ -130,31 +123,30 @@ insert クエリーを実行した後, 新しい行のプライマリキーが�
     # 複数行を INSERT するための, より速いやり方
     MyModel.insert_many(data_source).execute()
 
-:py:meth:`~Model.insert_many` メソッドは行タプルのリストも受け取れるので,
-対応するフィールドを指定することもできます:
+:py:meth:`~Model.insert_many` メソッドは行タプルのリストも受け取れるので, 対応するフィールドを指定することもできます:
 
 .. code-block:: python
 
-    # タプルの INSERT はできるが...
+    # タプルの INSERT はできますが...
     data = [('val1-1', 'val1-2'),
             ('val2-1', 'val2-2'),
             ('val3-1', 'val3-2')]
 
-    # 値がどのフィールドに対応するのかを指定する必要がある.
+    # 値がどのフィールドに対応するのかを指定する必要があります.
     MyModel.insert_many(data, fields=[MyModel.field1, MyModel.field2]).execute()
 
 一括 insert をトランザクションで囲むのも好ましいやり方です:
 
 .. code-block:: python
 
-    # もちろんこれをトランザクションで囲むこともできる:
+    # もちろんこれをトランザクションで囲むこともできます:
     with db.atomic():
         MyModel.insert_many(data, fields=fields).execute()
 
 .. note::
     SQLite ユーザは一括 insert に際して注意すべき事項があります. 特に SQLite3 のバージョンが
-    3.7.11.0 もしくはそれ以降の場合, 一括 insert API が使えるという利点があります. さらに,
-    SQLite では SQL クエリー中のバインド変数の数がデフォルトで ``999`` に制限されています.
+    3.7.11.0 もしくはそれ以降の場合, 一括 insert 用の API が使えるという利点があります.
+    さらに SQLite では、 SQL クエリー中のバインド変数の数がデフォルトで ``999`` に制限されています.
 
 一括で行を insert する
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -191,7 +183,7 @@ iterable(繰り返しループ)を *効率的に* *batch*-size の大きさの i
 ^^^^^^^^^^^^
 
 :py:meth:`Model.bulk_create` メソッドは :py:meth:`Model.insert_many` 
-とよく似た動作をするのですが, これと違うところは,
+とよく似た動作をします。違うところは,
 未保存の(unsaved)モデルインスタンスのリストを受け取って insert を行い,
 またオプションで batch-size パラメータを受け付けるところです.
 :py:meth:`~Model.bulk_create` API の使い方は以下のとおりです:
@@ -210,7 +202,7 @@ iterable(繰り返しループ)を *効率的に* *batch*-size の大きさの i
 .. note::
     ( ``RETURNING`` 句をサポートしている) Postgresql をお使いの場合,
     前述の未保存のモデルインスタンスでは, 
-    それらの新しいプライマリキーの値が自動的に付与されます.
+    それらに対して新しいプライマリキーの値が自動的に付与されます.
 
 さらに, Peewee では :py:meth:`Model.bulk_update` を提供しています.
 これはモデルのリストにおける１つ以上のカラムを効率的に update します.
@@ -218,7 +210,7 @@ iterable(繰り返しループ)を *効率的に* *batch*-size の大きさの i
 
 .. code-block:: python
 
-    # まず u1, u2, u3 の３つのユーザを作成する
+    # まず u1, u2, u3 の３つのユーザを作成します
     u1, u2, u3 = [User.create(username='u%s' % i) for i in (1, 2, 3)]
 
     # 次に user のインスタンスを変更します.
@@ -280,8 +272,8 @@ iterable(繰り返しループ)を *効率的に* *batch*-size の大きさの i
 既存のレコードを update する
 -------------------------------
 
-モデルインスタンスがプライマリキーを持っていれば, それ以降の :py:meth:`~Model.save`
-へのコールでは, 別レコードの *INSERT* ではなく *UPDATE* が行われるようになります.
+モデルインスタンスがプライマリキーを持つようになった場合, それ以降の :py:meth:`~Model.save`
+へのコールに対しては, 別レコードの *INSERT* ではなく *UPDATE* が行われるようになります.
 そのモデルのプライマリキーは変更されません:
 
 .. code-block:: pycon
@@ -299,7 +291,7 @@ iterable(繰り返しループ)を *効率的に* *batch*-size の大きさの i
     2
 
 複数のレコードを update したい場合は *UPDATE* クエリーを発行します.
-以下の例では昨日以前に作成された ``Tweet`` オブジェクトを update してそれらを *published* の状態にします.
+以下の例では、昨日以前に作成された ``Tweet`` オブジェクトを update して、それらを *published* の状態にします.
 :py:meth:`Model.update` はキーワード引数を受け付けますが, その際のキーはモデルのフィールド名に対応します:
 
 .. code-block:: pycon
@@ -331,7 +323,7 @@ Peewee ではアトミックな update を実行できます.
     ...     stat.counter += 1
     ...     stat.save()
 
-**これをやってはいけません!** これは遅いだけではなく脆弱であり,
+**このようなコードを書いてはいけません!** これは遅いだけではなく脆弱であり,
 複数のプロセスが同時にカウンターを update しようとしている場合に競合が発生する恐れがあります.
 
 代わりに :py:meth:`~Model.update` を使ってカウンターを自動的に update するようにしましょう:
@@ -368,7 +360,7 @@ SQLite(3.24.0 以前)もしくは MySQL について, Peewee では :py:meth:`~M
 
 :py:meth:`~Model.replace` と :py:meth:`~Insert.on_conflict_replace` の例を示します:
 
-.. code-block:: python
+.. code-block:: pycon
 
     class User(Model):
         username = TextField(unique=True)
@@ -437,7 +429,7 @@ upsert する例を以下に示します:
 
     # ユーザのログインをシミュレートする. 
     # ログインカウントとタイムスタンプの両方が正しく作成または update される.
-    now = datetime.now()
+    pycon = datetime.now()
     rowid = (User
              .insert(username='huey', last_login=now, login_count=1)
              .on_conflict(
@@ -956,14 +948,13 @@ join をまたぐようなフィルターも可能です:
 
     Tweet.select().order_by(-Tweet.created_date)  # "-" プリフィックスに注意.
 
-    # 同様に "+" を昇順という意味で使うことが可能ですが、順序を指定しない場合も
-    デフォルトは昇順となります。
+    # 同様に "+" を昇順という意味で使うことが可能ですが、順序を指定しない場合も、デフォルトは昇順となります。
     User.select().order_by(+User.username)
 
 join をまたいだソートを指定することも可能です。たとえば著者のユーザ名と作成日で
 ソートさせたい場合は以下のようになります:
 
-.. code-block:: pycon
+.. code-block:: python
 
     query = (Tweet
              .select()
@@ -978,22 +969,20 @@ join をまたいだソートを指定することも可能です。たとえば
       ON t1."user_id" = t2."id"
     ORDER BY t2."username", t1."created_date" DESC
 
-When sorting on a calculated value, you can either include the necessary SQL
-expressions, or reference the alias assigned to the value. Here are two
-examples illustrating these methods:
+計算結果をソートする場合、必要な SQL の評価式を含めてもいいですし、値に割り当てられた別名を参照することも可能です。これらのメソッドを説明するための例を以下に示します:
 
 .. code-block:: python
 
-    # Let's start with our base query. We want to get all usernames and the number of
-    # tweets they've made. We wish to sort this list from users with most tweets to
-    # users with fewest tweets.
+    # 基本的なクエリーから始めます。私たちはすべてのユーザ名と、ユーザたちが行った
+    # たくさんのツイートを取得したいとします。結果のソート順は、ツイート数が多い方
+    # からの降順とします。
     query = (User
              .select(User.username, fn.COUNT(Tweet.id).alias('num_tweets'))
              .join(Tweet, JOIN.LEFT_OUTER)
              .group_by(User.username))
 
-You can order using the same COUNT expression used in the ``select`` clause. In
-the example below we are ordering by the ``COUNT()`` of tweet ids descending:
+``select`` 句の中で使われているのと同じ COUNT 評価式を使ってソートすることもできます。
+以下の例ではツイート ID の ``COUNT()`` の降順にソートしています。
 
 .. code-block:: python
 
